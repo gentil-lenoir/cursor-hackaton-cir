@@ -15,9 +15,12 @@ function setupIPC() {
       try {
         adminStats = await apiClient.getAdminStats();
       } catch (apiError) {
+        const adminStatsError = apiClient.formatApiError(apiError);
+        console.error('Admin stats failed:', adminStatsError);
+
         return {
           success: false,
-          error: `Could not load worker stats from API (${loadConfig().apiBaseUrl}): ${apiClient.formatApiError(apiError)}`,
+          error: `Could not load worker stats from API (${loadConfig().apiBaseUrl}): ${adminStatsError}`,
         };
       }
 

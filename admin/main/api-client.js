@@ -1,4 +1,5 @@
 const axios = require('axios');
+const https = require('https');
 const { loadConfig } = require('./config');
 
 let token = null;
@@ -16,7 +17,8 @@ function getClient() {
       Accept: 'application/json',
       'Content-Type': 'application/json',
     },
-    timeout: 15000,
+    timeout: 20000,
+    httpsAgent: new https.Agent({ family: 4 }),
   });
 
   client.interceptors.request.use((request) => {
@@ -31,6 +33,10 @@ function getClient() {
 }
 
 function formatApiError(error) {
+  if (!error) {
+    return 'Unknown error';
+  }
+
   if (error.response?.data?.message) {
     const validationErrors = error.response.data.errors;
 
@@ -43,7 +49,37 @@ function formatApiError(error) {
     return error.response.data.message;
   }
 
-  return error.message;
+  if (error.response?.status) {
+    return `Request failed with status ${error.response.status}`;
+  }
+
+  if (error.code) {
+    const nested = error.cause?.errors?.find((entry) => entry?.message || entry?.code);
+
+    if (nested) {
+      return `${error.code}: ${nested.message || nested.code}`;
+    }
+
+    return error.code;
+  }
+
+  if (typeof error.message === 'string' && error.message.trim()) {
+    return error.message;
+  }
+
+  if (error.cause?.errors?.length) {
+    return error.cause.errors
+      .map((entry) => entry.message || entry.code)
+      .filter(Boolean)
+      .join('; ');
+  }
+
+  return 'Network request failed. Check the API URL and your internet connection.';
+}
+
+function resetAuth() {
+  token = null;
+  client = null;
 }
 
 async function ensureAuthenticated() {
@@ -52,21 +88,32 @@ async function ensureAuthenticated() {
   }
 
   const config = loadConfig();
-  const response = await getClient().post('/login', {
-    email: config.adminEmail,
-    password: config.adminPassword,
-  });
 
-  token = response.data.access_token
-    || response.data.data?.token
-    || response.data.token
-    || null;
+  try {
+    const response = await getClient().post('/login', {
+      email: config.adminEmail,
+      password: config.adminPassword,
+    });
 
-  if (!token) {
-    throw new Error('Admin login succeeded but no API token was returned.');
+    token = response.data.access_token
+      || response.data.data?.token
+      || response.data.token
+      || null;
+
+    if (!token) {
+      throw new Error('Admin login succeeded but no API token was returned.');
+    }
+
+    return token;
+  } catch (error) {
+    resetAuth();
+
+    if (error.response?.status === 422) {
+      throw new Error(`Admin login failed: ${formatApiError(error)} Check admin/config.json credentials and ensure the admin user exists on the server.`);
+    }
+
+    throw error;
   }
-
-  return token;
 }
 
 function mapIssue(issue) {
@@ -345,6 +392,7 @@ async function updateIssue(id, issue) {
 
 module.exports = {
   ensureAuthenticated,
+  resetAuth,
   listIssues,
   getStats,
   getAdminStats,
