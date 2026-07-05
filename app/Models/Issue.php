@@ -2,50 +2,42 @@
 
 namespace App\Models;
 
-use App\Enums\IssueStatus;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Model;
 
 class Issue extends Model
 {
     protected $fillable = [
-        'reference_number',
         'user_id',
-        'reporter_name',
-        'is_anonymous',
+        'worker_id',
+        'escalated_to',
+        'escalated_at',
+        'citizen_feedback',
+        'feedback_submitted_at',
         'title',
         'description',
-        'district',
-        'sector',
+        'category',
+        'status',
+        'deadline',
+        'priority',
         'latitude',
         'longitude',
-        'status',
-        'citizen_priority',
-        'ai_priority',
-        'ai_category',
-        'ai_summary',
-        'ai_tags',
-        'ai_confidence',
-        'community_score',
-        'final_priority',
-        'admin_priority_override',
-        'duplicate_of_id',
-        'is_public',
-        'resolved_at',
+        'address',
+        'upvotes_count',
+        'reported_at',
     ];
 
     protected function casts(): array
     {
         return [
-            'is_anonymous' => 'boolean',
-            'is_public' => 'boolean',
-            'status' => IssueStatus::class,
             'latitude' => 'decimal:7',
             'longitude' => 'decimal:7',
-            'ai_tags' => 'array',
-            'ai_confidence' => 'decimal:2',
-            'final_priority' => 'decimal:1',
-            'resolved_at' => 'datetime',
+            'reported_at' => 'datetime',
+            'escalated_at' => 'datetime',
+            'feedback_submitted_at' => 'datetime',
+            'deadline' => 'date',
         ];
     }
 
@@ -54,8 +46,38 @@ class Issue extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function duplicateOf(): BelongsTo
+    public function worker(): BelongsTo
     {
-        return $this->belongsTo(self::class, 'duplicate_of_id');
+        return $this->belongsTo(Worker::class);
+    }
+
+    public function images(): HasMany
+    {
+        return $this->hasMany(IssueImage::class);
+    }
+
+    public function comments(): HasMany
+    {
+        return $this->hasMany(Comment::class);
+    }
+
+    public function upvotes(): HasMany
+    {
+        return $this->hasMany(Upvote::class);
+    }
+
+    public function statusHistory(): HasMany
+    {
+        return $this->hasMany(IssueStatusHistory::class);
+    }
+
+    public function assignment(): HasOne
+    {
+        return $this->hasOne(IssueAssignment::class);
+    }
+
+    public function escalatedTo(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'escalated_to');
     }
 }
