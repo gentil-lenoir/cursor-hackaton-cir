@@ -21,9 +21,14 @@ function createWindow () {
 }
 
 app.whenReady().then(() => {
-  initDatabase()
-  setupIPC()
-  createWindow()
+  try {
+    initDatabase()
+    setupIPC()
+    createWindow()
+  } catch (error) {
+    console.error('Failed to start admin app:', error.message)
+    app.quit()
+  }
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
