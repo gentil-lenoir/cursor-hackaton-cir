@@ -48,8 +48,8 @@ Route::prefix('admin')
     });
 
 Route::prefix('citizen')->name('citizen.')->group(function () {
-    Route::get('/', fn () => view('citizen.shell'))->name('dashboard');
-    Route::get('/dashcode', fn () => view('citizen.dashcode'))->name('dashcode');
+    Route::get('/', fn () => view('citizen.dashcode'))->name('dashboard');
+    Route::redirect('/dashcode', '/citizen')->name('dashcode');
     Route::get('/profile', fn () => view('citizen.profile'))->name('profile');
     Route::get('/report', fn () => view('citizen.report'))->name('report');
     Route::get('/my-issues', fn () => view('citizen.my-issues'))->name('my_issues');

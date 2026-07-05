@@ -40,8 +40,46 @@ const removeAuthState = () => {
 
 const applyTheme = (settings = {}) => {
     const theme = settings.theme_preference || 'light';
-
     document.documentElement.dataset.citizenTheme = theme;
+    syncThemeToggleButtons(theme);
+};
+
+const syncThemeToggleButtons = (theme) => {
+    document.querySelectorAll('[data-theme-toggle]').forEach((group) => {
+        group.querySelectorAll('[data-theme-value]').forEach((button) => {
+            button.classList.toggle('active', button.dataset.themeValue === theme);
+        });
+    });
+};
+
+const persistTheme = async (theme) => {
+    const settings = { ...getStoredSettings(), theme_preference: theme };
+    setStoredSettings(settings);
+    applyTheme(settings);
+
+    const config = citizenConfig();
+    if (config.apiCitizenSettingsUrl && getToken()) {
+        try {
+            await apiRequest(config.apiCitizenSettingsUrl, {
+                method: 'PUT',
+                body: JSON.stringify({ theme_preference: theme }),
+            });
+        } catch {
+            // Keep local preference even if API sync fails.
+        }
+    }
+};
+
+const bindThemeToggle = () => {
+    syncThemeToggleButtons(getStoredSettings().theme_preference || 'light');
+
+    document.querySelectorAll('[data-theme-toggle]').forEach((group) => {
+        group.querySelectorAll('[data-theme-value]').forEach((button) => {
+            button.addEventListener('click', () => {
+                persistTheme(button.dataset.themeValue);
+            });
+        });
+    });
 };
 
 const apiRequest = async (url, options = {}) => {
@@ -125,10 +163,7 @@ const showMessage = (selector, message, type = 'info') => {
         return;
     }
 
-    target.className =
-        type === 'error'
-            ? 'rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700'
-            : 'rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700';
+    target.className = type === 'error' ? 'cir-alert-error' : 'cir-alert-success';
     target.textContent = message;
 };
 
@@ -172,47 +207,25 @@ const loadSettings = async () => {
     }
 };
 
+const updateShellUserInfo = (user) => {
+    document.querySelectorAll('[data-citizen-shell-name]').forEach((node) => {
+        node.textContent = user.name || 'Citizen';
+    });
+    document.querySelectorAll('[data-citizen-shell-email]').forEach((node) => {
+        node.textContent = user.email || user.phone || '—';
+    });
+    document.querySelectorAll('[data-citizen-name]').forEach((node) => {
+        node.textContent = user.name || 'Citizen';
+    });
+};
+
 const initShell = async (user) => {
-    const frame = document.querySelector('[data-citizen-frame]');
-    const nameNode = document.querySelector('[data-citizen-shell-name]');
-    const emailNode = document.querySelector('[data-citizen-shell-email]');
-
-    if (nameNode) {
-        nameNode.textContent = user.name;
-    }
-
-    if (emailNode) {
-        emailNode.textContent = user.email;
-    }
+    updateShellUserInfo(user);
 
     window.addEventListener('storage', (event) => {
         if (event.key === 'citizen_settings') {
             applyTheme(getStoredSettings());
         }
-    });
-
-    if (frame) {
-        frame.addEventListener('load', () => {
-            try {
-                frame.contentWindow?.postMessage(
-                    {
-                        type: 'citizen-theme-sync',
-                        payload: getStoredSettings(),
-                    },
-                    '*',
-                );
-            } catch {
-                // Ignore frame sync errors.
-            }
-        });
-    }
-
-    document.querySelectorAll('[data-citizen-nav]').forEach((link) => {
-        link.addEventListener('click', () => {
-            document.getElementById('citizen-sidebar')?.classList.add('is-closed');
-            document.querySelector('[data-drawer-backdrop="citizen-sidebar"]')?.classList.add('hidden');
-            document.body.classList.remove('overflow-hidden');
-        });
     });
 };
 
@@ -248,17 +261,17 @@ const initDashboardPage = async (user) => {
             ? recentIssues
                   .map(
                       (issue) => `
-                <article class="p-6 flex items-start gap-6 hover:bg-navy-50/50 transition-colors">
-                    <div class="w-14 h-14 rounded-2xl bg-navy-50 text-navy-700 flex items-center justify-center shrink-0 border border-navy-100">
+                <article class="p-6 flex items-start gap-6 transition-colors hover:bg-[var(--cir-surface-hover)]">
+                    <div class="cir-icon-chip shrink-0 !h-14 !w-14">
                         <span class="material-symbols-outlined text-2xl">${issue.status === 'resolved' ? 'task_alt' : 'pending_actions'}</span>
                     </div>
                     <div class="flex-1">
                         <div class="flex items-center justify-between gap-4 mb-2">
-                            <h4 class="font-bold text-navy-900 text-lg">${escapeHtml(issue.title)}</h4>
-                            <span class="px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider border ${statusClass(issue.status)}">${escapeHtml(formatStatus(issue.status))}</span>
+                            <h4 class="text-lg font-bold" style="color: var(--cir-text)">${escapeHtml(issue.title)}</h4>
+                            <span class="cir-pill ${statusClass(issue.status)}">${escapeHtml(formatStatus(issue.status))}</span>
                         </div>
-                        <p class="text-navy-600 text-sm mb-3">${escapeHtml(issue.address || 'Location not shared yet')}</p>
-                        <div class="flex items-center gap-4 text-xs font-semibold text-navy-400">
+                        <p class="text-sm mb-3" style="color: var(--cir-text-muted)">${escapeHtml(issue.address || 'Location not shared yet')}</p>
+                        <div class="flex items-center gap-4 text-xs font-semibold" style="color: var(--cir-text-faint)">
                             <span>#CF-${issue.id}</span>
                             <span>${escapeHtml(formatDateTime(issue.reported_at))}</span>
                             <span>${issue.upvotes_count} upvotes</span>
@@ -267,7 +280,7 @@ const initDashboardPage = async (user) => {
                 </article>`,
                   )
                   .join('')
-            : '<div class="p-6 text-sm text-navy-500">No issues reported yet. Start with your first complaint.</div>';
+            : '<div class="p-6 text-sm" style="color: var(--cir-text-muted)">No issues reported yet. Start with your first complaint.</div>';
     }
 };
 
@@ -301,19 +314,19 @@ const initMyIssuesPage = async () => {
             ? issues
                   .map(
                       (issue) => `
-                <div class="dashcode-surface p-6 sm:p-7">
+                <div class="cir-card p-6 sm:p-7">
                     <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
                         <div class="flex items-start gap-4">
-                            <div class="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 bg-navy-50 text-navy-700 border border-navy-100">
+                            <div class="cir-icon-chip shrink-0 !h-14 !w-14">
                                 <span class="material-symbols-outlined text-2xl">${issue.status === 'resolved' ? 'task_alt' : 'pending_actions'}</span>
                             </div>
                             <div>
                                 <div class="flex flex-wrap items-center gap-3 mb-2">
-                                    <h2 class="text-xl font-bold text-navy-900">${escapeHtml(issue.title)}</h2>
-                                    <span class="dashcode-pill ${statusClass(issue.status)}">${escapeHtml(formatStatus(issue.status))}</span>
+                                    <h2 class="text-xl font-bold" style="color: var(--cir-text)">${escapeHtml(issue.title)}</h2>
+                                    <span class="cir-pill ${statusClass(issue.status)}">${escapeHtml(formatStatus(issue.status))}</span>
                                 </div>
-                                <p class="text-sm text-navy-600 max-w-2xl">${escapeHtml(issue.description || 'No description')}</p>
-                                <div class="mt-4 flex flex-wrap items-center gap-4 text-xs font-semibold text-navy-400">
+                                <p class="text-sm max-w-2xl" style="color: var(--cir-text-muted)">${escapeHtml(issue.description || 'No description')}</p>
+                                <div class="mt-4 flex flex-wrap items-center gap-4 text-xs font-semibold" style="color: var(--cir-text-faint)">
                                     <span>#CF-${issue.id}</span>
                                     <span>${escapeHtml(issue.category || 'General')}</span>
                                     <span>${escapeHtml(formatDateTime(issue.reported_at))}</span>
@@ -326,7 +339,7 @@ const initMyIssuesPage = async () => {
                 </div>`,
                   )
                   .join('')
-            : '<div class="dashcode-surface p-6 text-sm text-navy-500">No issues matched your filter.</div>';
+            : '<div class="cir-card p-6 text-sm" style="color: var(--cir-text-muted)">No issues matched your filter.</div>';
     };
 
     statusFilter?.addEventListener('change', render);
@@ -643,6 +656,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const config = citizenConfig();
 
     applyTheme(getStoredSettings());
+    bindThemeToggle();
 
     if (!config.page) {
         return;
@@ -656,11 +670,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     await loadSettings();
-
-    if (config.page === 'shell') {
-        await initShell(user);
-        return;
-    }
+    updateShellUserInfo(user);
 
     switch (config.page) {
         case 'dashboard':
