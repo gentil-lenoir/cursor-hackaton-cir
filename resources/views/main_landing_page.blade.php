@@ -16,10 +16,18 @@
                 <p class="cir-subtitle mb-8 max-w-xl mx-auto lg:mx-0">
                     CIR turns citizen reports into visible action with real-time issue tracking, location-based reporting, and a resolution pipeline built for Rwanda.
                 </p>
-                <button class="cir-btn cir-btn-primary !px-8 !py-4 !text-base" id="report-issue-btn" data-login-url="{{ route('login') }}" type="button">
-                    Report Issue
-                    <span class="material-symbols-outlined">arrow_forward</span>
-                </button>
+                <div
+                    class="flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center lg:justify-start"
+                    data-hero-auth
+                    data-login-url="{{ route('login') }}"
+                    data-register-url="{{ route('register') }}"
+                >
+                    <a class="cir-btn cir-btn-ghost !px-8 !py-4 !text-base auth-guest-link" href="{{ route('login') }}">Login</a>
+                    <a class="cir-btn cir-btn-primary !px-8 !py-4 !text-base auth-guest-link" href="{{ route('register') }}">Sign Up</a>
+                    <a class="cir-btn cir-btn-primary !px-8 !py-4 !text-base auth-citizen-link hidden" href="{{ route('citizen.dashboard') }}">Dashboard</a>
+                    <a class="cir-btn cir-btn-secondary !px-8 !py-4 !text-base auth-citizen-link hidden" href="{{ route('citizen.report') }}">Report Issue</a>
+                    <button class="cir-btn cir-btn-ghost !px-8 !py-4 !text-base !border-rose-400/30 !text-rose-500 hover:!bg-rose-500/10 auth-citizen-link hidden" data-auth-logout type="button">Logout</button>
+                </div>
             </div>
 
             <div class="cir-landing-card p-6 md:p-8">

@@ -19,10 +19,6 @@
                     <a class="rounded-full px-4 py-2 text-sm font-semibold text-slate-200 transition hover:bg-white/10 hover:text-emerald-300" href="#features">Features</a>
                 </div>
                 @include('components.citizen-theme-toggle')
-                <div class="flex items-center gap-2" data-login-url="{{ route('login') }}" data-register-url="{{ route('register') }}">
-                    <a class="cir-btn cir-btn-ghost !border-white/15 !text-white hover:!bg-white/10 auth-guest-link" href="{{ route('login') }}">Login</a>
-                    <a class="cir-btn cir-btn-primary auth-guest-link" href="{{ route('register') }}">Sign Up</a>
-                </div>
             </div>
 
             <div class="flex items-center gap-2 md:hidden">
@@ -40,10 +36,6 @@
                     <a class="rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-200 hover:bg-white/10" href="#about">About</a>
                     <a class="rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-200 hover:bg-white/10" href="#users">Users</a>
                     <a class="rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-200 hover:bg-white/10" href="#features">Features</a>
-                </div>
-                <div class="flex flex-col gap-2">
-                    <a class="cir-btn cir-btn-ghost !text-white auth-guest-link" href="{{ route('login') }}">Login</a>
-                    <a class="cir-btn cir-btn-primary auth-guest-link" href="{{ route('register') }}">Sign Up</a>
                 </div>
             </div>
         </div>

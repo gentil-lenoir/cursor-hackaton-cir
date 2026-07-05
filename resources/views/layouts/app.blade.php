@@ -19,7 +19,13 @@
         @vite(['resources/css/app.css', 'resources/css/citizen-theme.css', 'resources/js/app.js'])
         @stack('page_assets')
     </head>
-    <body class="cir-page font-display antialiased">
+    <body
+        class="cir-page font-display antialiased"
+        data-api-me-url="{{ url('/api/me') }}"
+        data-login-url="{{ route('login') }}"
+        data-dashboard-citizen-url="{{ route('citizen.dashboard') }}"
+        data-report-issue-url="{{ route('citizen.report') }}"
+    >
         @include('components.navbar')
         @yield('content')
         @include('components.footer')

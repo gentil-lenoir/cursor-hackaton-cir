@@ -1,54 +1,16 @@
-const TOKEN_KEY = 'token';
-const USER_KEY = 'user';
+import {
+    clearAuthState,
+    getToken,
+    getUser,
+    isAuthenticated,
+    migrateLegacyAuthStorage,
+    removeToken,
+    removeUser,
+    setToken,
+    setUser,
+} from './auth-storage';
+
 const MIN_PASSWORD_LENGTH = 8;
-
-function getToken() {
-    return localStorage.getItem(TOKEN_KEY) || '';
-}
-
-function setToken(token) {
-    if (!token) {
-        return;
-    }
-
-    localStorage.setItem(TOKEN_KEY, token);
-}
-
-function removeToken() {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem('jwt_token');
-}
-
-function getUser() {
-    const rawUser = localStorage.getItem(USER_KEY) || localStorage.getItem('auth_user');
-
-    if (!rawUser) {
-        return null;
-    }
-
-    try {
-        return JSON.parse(rawUser);
-    } catch {
-        return null;
-    }
-}
-
-function setUser(user) {
-    if (!user) {
-        return;
-    }
-
-    localStorage.setItem(USER_KEY, JSON.stringify(user));
-}
-
-function removeUser() {
-    localStorage.removeItem(USER_KEY);
-    localStorage.removeItem('auth_user');
-}
-
-function isAuthenticated() {
-    return Boolean(getToken());
-}
 
 function getConfig() {
     const body = document.body;
@@ -304,7 +266,9 @@ function validateRegisterForm(form) {
     return { isValid, data };
 }
 
-async function syncAuthenticatedUser(config) {
+async function syncAuthenticatedUser(config = getConfig()) {
+    migrateLegacyAuthStorage();
+
     const token = getToken();
 
     if (!token) {
@@ -321,9 +285,8 @@ async function syncAuthenticatedUser(config) {
 
         return user;
     } catch (error) {
-        if (error.status === 401) {
-            removeToken();
-            removeUser();
+        if (error.status === 401 || error.status === 403) {
+            clearAuthState();
         }
 
         return null;
@@ -516,10 +479,21 @@ function bindFieldCleanup() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+    migrateLegacyAuthStorage();
     bindPasswordToggles();
     bindLogoutButtons();
     bindFieldCleanup();
     bindAuthForms();
+
+    const config = getConfig();
+
+    if (config.page === 'login' || config.page === 'register') {
+        const user = await syncAuthenticatedUser(config);
+
+        if (user?.role) {
+            redirectToRoleDashboard(user.role, config);
+        }
+    }
 });
 
 window.Auth = {
@@ -529,6 +503,7 @@ window.Auth = {
     getUser,
     isAuthenticated,
     logout,
+    syncAuthenticatedUser,
 };
 
-export { getToken, setToken, removeToken, getUser, isAuthenticated, logout };
+export { getToken, setToken, removeToken, getUser, isAuthenticated, logout, syncAuthenticatedUser };
