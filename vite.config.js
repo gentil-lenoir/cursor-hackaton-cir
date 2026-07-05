@@ -11,6 +11,7 @@ export default defineConfig({
                 'resources/js/app.js',
                 'resources/js/auth.js',
                 'resources/js/main.js',
+                'resources/js/community.js',
             ],
             refresh: true,
         }),

@@ -41,6 +41,10 @@
                     <span class="material-symbols-outlined">list_alt</span>
                     <span>My Issues</span>
                 </a>
+                <a href="{{ route('community.index') }}" class="cir-sidebar-link {{ request()->routeIs('community.*') ? 'active' : '' }}">
+                    <span class="material-symbols-outlined">groups</span>
+                    <span>Community Feed</span>
+                </a>
                 <a href="{{ route('home') }}" class="cir-sidebar-link">
                     <span class="material-symbols-outlined">home</span>
                     <span>Public Home</span>

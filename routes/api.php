@@ -12,7 +12,12 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
-Route::get('/issues', [IssueController::class, 'index']);
+Route::middleware('auth.sanctum.optional')->group(function (): void {
+    Route::get('/issues', [IssueController::class, 'index']);
+    Route::get('/issues/{id}', [IssueController::class, 'show']);
+    Route::get('/issues/{id}/comments', [CommentController::class, 'index']);
+});
+
 Route::get('/stats', [IssueController::class, 'stats']);
 
 Route::middleware('auth:sanctum')->group(function (): void {
@@ -31,7 +36,6 @@ Route::middleware('auth:sanctum')->group(function (): void {
         ->middleware('role:citizen');
 
     Route::post('/issues', [IssueController::class, 'store']);
-    Route::get('/issues/{id}', [IssueController::class, 'show']);
     Route::put('/issues/{id}', [IssueController::class, 'update']);
     Route::delete('/issues/{id}', [IssueController::class, 'destroy']);
 
@@ -67,7 +71,5 @@ Route::middleware('auth:sanctum')->group(function (): void {
         ->middleware('role:system_manager');
 
     Route::post('/comments', [CommentController::class, 'store']);
-    Route::get('/issues/{id}/comments', [CommentController::class, 'index']);
-
     Route::post('/issues/{id}/upvote', [UpvoteController::class, 'store']);
 });

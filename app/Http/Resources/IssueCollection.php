@@ -21,9 +21,23 @@ class IssueCollection extends ResourceCollection
 
     public function with(Request $request): array
     {
+        if (method_exists($this->resource, 'total')) {
+            return [
+                'meta' => [
+                    'total' => $this->resource->total(),
+                    'current_page' => $this->resource->currentPage(),
+                    'last_page' => $this->resource->lastPage(),
+                    'per_page' => $this->resource->perPage(),
+                ],
+            ];
+        }
+
         return [
             'meta' => [
-                'total' => method_exists($this->resource, 'total') ? $this->resource->total() : $this->collection->count(),
+                'total' => $this->collection->count(),
+                'current_page' => 1,
+                'last_page' => 1,
+                'per_page' => $this->collection->count(),
             ],
         ];
     }

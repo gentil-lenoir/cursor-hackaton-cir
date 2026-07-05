@@ -28,7 +28,9 @@ class IssueResource extends JsonResource
             ],
             'reported_at' => optional($this->reported_at)->toISOString(),
             'upvotes_count' => $this->upvotes_count,
+            'has_upvoted' => (bool) ($this->has_upvoted ?? false),
             'comments_count' => $this->whenCounted('comments'),
+            'comments' => CommentResource::collection($this->whenLoaded('comments')),
             'reporter' => [
                 'id' => $this->user?->id,
                 'name' => $this->user?->name,

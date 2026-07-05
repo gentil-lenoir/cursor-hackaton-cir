@@ -40,7 +40,7 @@
         </section>
 
         {{-- Quick actions --}}
-        <section class="mb-12 grid grid-cols-1 gap-6 md:grid-cols-2">
+        <section class="mb-12 grid grid-cols-1 gap-6 md:grid-cols-3">
             <a href="{{ route('citizen.report') }}" class="cir-action-tile group flex flex-col items-center">
                 <div class="mb-5 flex h-20 w-20 items-center justify-center rounded-3xl bg-emerald-500/10 text-emerald-500 transition-colors group-hover:bg-emerald-500 group-hover:text-white">
                     <span class="material-symbols-outlined text-4xl">add_circle</span>
@@ -54,6 +54,13 @@
                 </div>
                 <h4 class="cir-section-heading mb-2">My Reported Issues</h4>
                 <p class="max-w-xs text-sm" style="color: var(--cir-text-muted)">See your complaint history, assigned workers, and status updates.</p>
+            </a>
+            <a href="{{ route('community.index') }}" class="cir-action-tile group flex flex-col items-center">
+                <div class="mb-5 flex h-20 w-20 items-center justify-center rounded-3xl bg-sky-500/10 text-sky-500 transition-colors group-hover:bg-sky-600 group-hover:text-white">
+                    <span class="material-symbols-outlined text-4xl">groups</span>
+                </div>
+                <h4 class="cir-section-heading mb-2">Community Feed</h4>
+                <p class="max-w-xs text-sm" style="color: var(--cir-text-muted)">Browse other citizens' reports, upvote urgent issues, and join discussions.</p>
             </a>
         </section>
 

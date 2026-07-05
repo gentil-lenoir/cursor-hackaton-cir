@@ -20,6 +20,11 @@ Route::get('/register', function () {
     return view('auth.signup');
 })->name('register');
 
+Route::get('/community', fn () => view('community.index'))->name('community.index');
+Route::get('/community/{issue}', fn (int $issue) => view('community.show', ['issueId' => $issue]))
+    ->whereNumber('issue')
+    ->name('community.show');
+
 Route::redirect('/signup', '/register')->name('signup');
 
 Route::redirect('/municipal-manager', '/admin');
@@ -53,6 +58,7 @@ Route::prefix('citizen')->name('citizen.')->group(function () {
     Route::get('/profile', fn () => view('citizen.profile'))->name('profile');
     Route::get('/report', fn () => view('citizen.report'))->name('report');
     Route::get('/my-issues', fn () => view('citizen.my-issues'))->name('my_issues');
+    Route::redirect('/community', '/community')->name('community');
 });
 
 Route::prefix('worker')->name('worker.')->group(function () {

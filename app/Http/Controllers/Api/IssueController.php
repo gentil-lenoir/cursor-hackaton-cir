@@ -22,10 +22,27 @@ class IssueController extends Controller
     {
         try {
             $perPage = max(1, min((int) $request->integer('limit', 10), 20));
+            $search = $request->string('search')->trim();
             $issues = Issue::query()
                 ->with(['user', 'images', 'assignment.worker', 'assignment.assignedBy', 'escalatedTo', 'worker.department'])
                 ->withCount('comments')
+                ->when($request->user(), function ($query) use ($request) {
+                    $query->withExists([
+                        'upvotes as has_upvoted' => fn ($upvoteQuery) => $upvoteQuery->where('user_id', $request->user()->id),
+                    ]);
+                })
                 ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')))
+                ->when($request->filled('category'), fn ($query) => $query->where('category', strtolower($request->string('category'))))
+                ->when($search->isNotEmpty(), function ($query) use ($search) {
+                    $term = '%'.$search.'%';
+                    $query->where(function ($innerQuery) use ($term) {
+                        $innerQuery
+                            ->where('title', 'like', $term)
+                            ->orWhere('description', 'like', $term)
+                            ->orWhere('address', 'like', $term)
+                            ->orWhere('category', 'like', $term);
+                    });
+                })
                 ->when($request->boolean('escalated_only'), fn ($query) => $query->where('status', 'escalated'))
                 ->latest()
                 ->paginate($perPage);
@@ -127,19 +144,19 @@ class IssueController extends Controller
                 'user',
                 'images',
                 'comments.user',
-                'upvotes',
                 'assignment.worker',
                 'assignment.assignedBy',
                 'escalatedTo',
                 'statusHistory.changedBy',
                 'worker.department',
-            ])->withCount('comments')->findOrFail($id);
-
-            if ($request->user() && ! $this->canAccessIssue($request->user(), $issue)) {
-                return response()->json([
-                    'message' => 'You do not have permission to view this issue.',
-                ], 403);
-            }
+            ])
+                ->withCount('comments')
+                ->when($request->user(), function ($query) use ($request) {
+                    $query->withExists([
+                        'upvotes as has_upvoted' => fn ($upvoteQuery) => $upvoteQuery->where('user_id', $request->user()->id),
+                    ]);
+                })
+                ->findOrFail($id);
 
             return new IssueResource($issue);
         } catch (Throwable $exception) {

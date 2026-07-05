@@ -248,9 +248,7 @@ function handleCTAButtons(user = null) {
     });
 
     browseButton?.addEventListener('click', () => {
-        window.location.href = isCitizenAuthenticated
-            ? browseButton.dataset.issuesUrl || '/citizen/my-issues'
-            : config.loginUrl;
+        window.location.href = browseButton.dataset.issuesUrl || '/community';
     });
 }
 

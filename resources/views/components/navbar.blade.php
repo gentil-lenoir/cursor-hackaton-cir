@@ -16,6 +16,7 @@
                     <a class="rounded-full px-4 py-2 text-sm font-semibold text-slate-200 transition hover:bg-white/10 hover:text-emerald-300" href="#home">Home</a>
                     <a class="rounded-full px-4 py-2 text-sm font-semibold text-slate-200 transition hover:bg-white/10 hover:text-emerald-300" href="#about">About</a>
                     <a class="rounded-full px-4 py-2 text-sm font-semibold text-slate-200 transition hover:bg-white/10 hover:text-emerald-300" href="#users">Users</a>
+                    <a class="rounded-full px-4 py-2 text-sm font-semibold text-slate-200 transition hover:bg-white/10 hover:text-emerald-300" href="{{ route('community.index') }}">Community</a>
                     <a class="rounded-full px-4 py-2 text-sm font-semibold text-slate-200 transition hover:bg-white/10 hover:text-emerald-300" href="#features">Features</a>
                 </div>
                 @include('components.citizen-theme-toggle')
@@ -35,6 +36,7 @@
                     <a class="rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-200 hover:bg-white/10" href="#home">Home</a>
                     <a class="rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-200 hover:bg-white/10" href="#about">About</a>
                     <a class="rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-200 hover:bg-white/10" href="#users">Users</a>
+                    <a class="rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-200 hover:bg-white/10" href="{{ route('community.index') }}">Community</a>
                     <a class="rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-200 hover:bg-white/10" href="#features">Features</a>
                 </div>
             </div>
