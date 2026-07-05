@@ -1,36 +1,14 @@
-# CIR Admin App (Electron + React)
+# Apps/admin_app (legacy prototype)
 
-Frontend-only **Electron + React** admin desktop app for the Citizen Issue Report platform.
+This React/Electron app was built separately from the **official admin code on `main`**.
 
-## Stack
+**Use the official admin instead:**
 
-- Electron + Vite + React + TypeScript
-- React Router + TanStack Query + axios
-- Tailwind CSS
+| What | Where |
+|------|--------|
+| Desktop (Electron + SQLite) | [`admin/`](../../admin/) — `npm run admin:desktop` from repo root |
+| Web admin (Laravel, real DB) | `http://localhost:8000/admin` after `./scripts/start-backend.sh` |
 
-## Run
+Login for web admin: `admin2004@gmail.com` / `admin123`
 
-```bash
-cd Apps/admin_app
-cp .env.example .env
-npm install
-npm run dev
-```
-
-> **Note:** Clear `NODE_OPTIONS` before starting Electron if you used `--use-system-ca` for npm install:
-> `Remove-Item Env:NODE_OPTIONS -ErrorAction SilentlyContinue`
-
-## Env
-
-`VITE_API_BASE_URL=http://localhost:8000/api/v1`
-
-## Screens
-
-- Login (email/password or +250 OTP)
-- Issue Inbox
-- Issue Detail (AI panel, priority override, status change)
-- Placeholders: Tasks, Workers, Analytics, Settings
-
-## Branch
-
-`admin_app`
+This folder is kept for reference only.

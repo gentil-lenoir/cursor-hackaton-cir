@@ -21,5 +21,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Issues
   listIssues: (params) => ipcRenderer.invoke('issues:list', params),
-  updateIssue: (id, issue) => ipcRenderer.invoke('issues:update', { id, issue })
+  updateIssue: (id, issue) => ipcRenderer.invoke('issues:update', { id, issue }),
+
+  // Settings
+  getSettings: () => ipcRenderer.invoke('settings:get'),
+  saveSettings: (payload) => ipcRenderer.invoke('settings:save', payload),
+  changePassword: (payload) => ipcRenderer.invoke('settings:changePassword', payload)
 })

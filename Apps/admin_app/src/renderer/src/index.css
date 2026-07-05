@@ -1,12 +1,57 @@
 @import 'tailwindcss';
 
-:root {
+@theme {
+  --color-cir-bg: var(--cir-bg);
+  --color-cir-bg-deep: var(--cir-bg-deep);
+  --color-cir-surface: var(--cir-surface);
+  --color-cir-elevated: var(--cir-elevated);
+  --color-cir-border: var(--cir-border);
+  --color-cir-border-subtle: var(--cir-border-subtle);
+  --color-cir-input: var(--cir-input);
+}
+
+:root,
+[data-theme='dark'] {
   color-scheme: dark;
+  --cir-nav-active-bg: rgb(16 185 129 / 0.1);
+  --cir-page-base: #0f172a;
+  --cir-bg: #0e221e;
+  --cir-bg-deep: #0a1816;
+  --cir-surface: #0f252b;
+  --cir-elevated: #122d35;
+  --cir-border: #1a4048;
+  --cir-border-subtle: #234952;
+  --cir-input: #081216;
+  --brand-primary: #21d4b4;
+  --brand-primary-strong: #10b981;
+  --cir-text-primary: #f8fafc;
+  --cir-text-secondary: #cbd5e1;
+  --cir-text-muted: #94a3b8;
+}
+
+[data-theme='light'] {
+  color-scheme: light;
+  --cir-nav-active-bg: rgb(16 185 129 / 0.14);
+  --cir-page-base: #f0fdf4;
+  --cir-bg: #ecfdf5;
+  --cir-bg-deep: #e2efec;
+  --cir-surface: #ffffff;
+  --cir-elevated: #f8fafc;
+  --cir-border: #c7ddd8;
+  --cir-border-subtle: #dce8e4;
+  --cir-input: #ffffff;
+  --brand-primary: #10b981;
+  --brand-primary-strong: #059669;
+  --cir-text-primary: #0f172a;
+  --cir-text-secondary: #475569;
+  --cir-text-muted: #64748b;
+}
+
+:root {
   font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-  color: #e2e8f0;
-  background-color: #0f172a;
+  color: var(--cir-text-primary);
 }
 
 * {
@@ -16,10 +61,19 @@
 body {
   margin: 0;
   min-height: 100vh;
+  background-color: var(--cir-page-base);
+  background-image: linear-gradient(var(--cir-nav-active-bg), var(--cir-nav-active-bg));
+  background-attachment: fixed;
 }
 
 #root {
   min-height: 100vh;
+  background: transparent;
+}
+
+.cir-page-bg {
+  background-color: var(--cir-page-base);
+  background-image: linear-gradient(var(--cir-nav-active-bg), var(--cir-nav-active-bg));
 }
 
 button,
@@ -27,4 +81,69 @@ input,
 select,
 textarea {
   font: inherit;
+}
+
+/* Light mode — readable text on pale surfaces */
+[data-theme='light'] .text-white,
+[data-theme='light'] .text-slate-100 {
+  color: var(--cir-text-primary);
+}
+
+[data-theme='light'] .text-slate-200,
+[data-theme='light'] .text-slate-300 {
+  color: var(--cir-text-secondary);
+}
+
+[data-theme='light'] .text-slate-400,
+[data-theme='light'] .text-slate-500 {
+  color: var(--cir-text-muted);
+}
+
+[data-theme='light'] .hover\:text-white:hover {
+  color: var(--cir-text-primary);
+}
+
+[data-theme='light'] .cir-sidebar {
+  background: linear-gradient(160deg, #ffffff 0%, #f0fdf4 55%, #d1fae5 100%);
+  border-color: #a7f3d0;
+}
+
+[data-theme='light'] .cir-sidebar .cir-sidebar-brand {
+  color: #059669;
+}
+
+[data-theme='light'] .cir-sidebar .cir-sidebar-title {
+  color: #0f172a;
+}
+
+[data-theme='light'] .cir-nav-link {
+  color: #475569;
+}
+
+[data-theme='light'] .cir-nav-link:hover {
+  color: #0f172a;
+  background: rgba(16, 185, 129, 0.08);
+}
+
+[data-theme='light'] .cir-nav-link-active {
+  color: #059669;
+  border-left-color: #10b981;
+  background: var(--cir-nav-active-bg);
+}
+
+[data-theme='dark'] .cir-nav-link-active {
+  background: var(--cir-nav-active-bg);
+}
+
+[data-theme='light'] .cir-main,
+[data-theme='dark'] .cir-main {
+  background: transparent;
+}
+
+[data-theme='light'] .cir-theme-toggle button:not([aria-pressed='true']) {
+  color: #64748b;
+}
+
+[data-theme='light'] .cir-theme-toggle button:not([aria-pressed='true']):hover {
+  color: #0f172a;
 }

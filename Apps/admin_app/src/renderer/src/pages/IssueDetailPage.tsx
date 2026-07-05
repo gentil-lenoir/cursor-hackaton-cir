@@ -2,12 +2,14 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
 import {
+  createIssuePublicNote,
   fetchAdminIssue,
   fetchIssueActivity,
   fetchIssueComments,
   updateAdminIssue
 } from '@/api/client'
-import { EmptyState, PageHeader, PriorityBadge, StatusBadge } from '@/components/ui'
+import { AssignWorkerModal } from '@/components/AssignWorkerModal'
+import { EmptyState, PriorityBadge, StatusBadge } from '@/components/ui'
 import type { IssueStatus } from '@/types'
 
 const STATUS_TRANSITIONS: Array<{ value: IssueStatus; label: string }> = [
@@ -27,6 +29,9 @@ export function IssueDetailPage() {
 
   const [priorityOverride, setPriorityOverride] = useState<number | null>(null)
   const [selectedStatus, setSelectedStatus] = useState<string>('')
+  const [showAssignModal, setShowAssignModal] = useState(false)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [publicNote, setPublicNote] = useState('')
 
   const issueQuery = useQuery({
     queryKey: ['admin-issue', issueId],
@@ -52,6 +57,19 @@ export function IssueDetailPage() {
     onSuccess: (updated) => {
       queryClient.setQueryData(['admin-issue', issueId], updated)
       void queryClient.invalidateQueries({ queryKey: ['admin-issues'] })
+      void queryClient.invalidateQueries({ queryKey: ['issue-activity', issueId] })
+      setSelectedStatus('')
+      setPriorityOverride(null)
+      setSuccessMessage('Issue updated successfully.')
+    }
+  })
+
+  const publicNoteMutation = useMutation({
+    mutationFn: (body: string) => createIssuePublicNote(issueId, { body }),
+    onSuccess: () => {
+      setPublicNote('')
+      void queryClient.invalidateQueries({ queryKey: ['issue-activity', issueId] })
+      setSuccessMessage('Public resolution note added.')
     }
   })
 
@@ -71,7 +89,7 @@ export function IssueDetailPage() {
     )
   }
 
-  if (issueQuery.isError) {
+  if (issueQuery.isError || !issueQuery.data) {
     return (
       <div className="px-8 py-6">
         <EmptyState
@@ -92,7 +110,7 @@ export function IssueDetailPage() {
 
   return (
     <div>
-      <div className="border-b border-slate-800 px-8 py-4">
+      <div className="border-b border-cir-border px-8 py-4">
         <div className="flex flex-wrap items-center gap-3">
           <Link
             to="/inbox"
@@ -101,7 +119,7 @@ export function IssueDetailPage() {
             &larr; Back to Inbox
           </Link>
           <span className="text-slate-600">|</span>
-          <span className="font-mono text-sm text-sky-300">{issue.reference_number}</span>
+          <span className="font-mono text-sm text-emerald-300">{issue.reference_number}</span>
           <StatusBadge status={issue.status as IssueStatus} />
           <PriorityBadge priority={issue.final_priority} />
         </div>
@@ -109,9 +127,15 @@ export function IssueDetailPage() {
       </div>
 
       <div className="space-y-6 px-8 py-6">
+        {successMessage ? (
+          <p className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-300">
+            {successMessage}
+          </p>
+        ) : null}
+
         <div className="grid gap-6 lg:grid-cols-2">
-          <section className="rounded-xl border border-slate-800 bg-slate-900/60 p-5">
-            <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-sky-400">
+          <section className="rounded-xl border border-cir-border bg-cir-surface/60 p-5">
+            <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-emerald-400">
               Report Details
             </h3>
             <dl className="space-y-3 text-sm">
@@ -152,8 +176,8 @@ export function IssueDetailPage() {
             </div>
           </section>
 
-          <section className="rounded-xl border border-slate-800 bg-slate-900/60 p-5">
-            <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-sky-400">
+          <section className="rounded-xl border border-cir-border bg-cir-surface/60 p-5">
+            <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-emerald-400">
               AI Analysis
             </h3>
             {issue.ai_summary ? (
@@ -192,7 +216,7 @@ export function IssueDetailPage() {
                     {issue.ai_tags.map((tag) => (
                       <span
                         key={tag}
-                        className="rounded-full bg-sky-500/10 px-2 py-0.5 text-xs text-sky-300"
+                        className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs text-emerald-300"
                       >
                         {tag}
                       </span>
@@ -204,8 +228,8 @@ export function IssueDetailPage() {
           </section>
         </div>
 
-        <section className="rounded-xl border border-slate-800 bg-slate-900/60 p-5">
-          <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-sky-400">
+        <section className="rounded-xl border border-cir-border bg-cir-surface/60 p-5">
+          <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-emerald-400">
             Actions
           </h3>
           <div className="grid gap-4 md:grid-cols-3">
@@ -220,7 +244,7 @@ export function IssueDetailPage() {
                     step={1}
                     value={priorityOverride ?? issue.admin_priority_override ?? issue.final_priority}
                     onChange={(e) => setPriorityOverride(Number(e.target.value))}
-                    className="w-full accent-sky-500"
+                    className="w-full accent-emerald-500"
                   />
                   <span className="w-6 text-center text-sm font-medium text-white">
                     {priorityOverride ?? issue.admin_priority_override ?? issue.final_priority}
@@ -237,7 +261,7 @@ export function IssueDetailPage() {
                     })
                   }}
                   disabled={updateMutation.isPending}
-                  className="mt-2 rounded-lg bg-sky-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-sky-500 disabled:opacity-60"
+                  className="mt-2 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-500 disabled:opacity-60"
                 >
                   {updateMutation.isPending ? 'Saving...' : 'Apply Priority Override'}
                 </button>
@@ -250,7 +274,7 @@ export function IssueDetailPage() {
                 <select
                   value={selectedStatus || issue.status}
                   onChange={(e) => setSelectedStatus(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none focus:border-sky-500"
+                  className="mt-1 w-full rounded-lg border border-cir-border-subtle bg-cir-input px-3 py-2 text-sm text-white outline-none focus:border-emerald-500"
                 >
                   {STATUS_TRANSITIONS.map((opt) => (
                     <option key={opt.value} value={opt.value}>
@@ -266,7 +290,7 @@ export function IssueDetailPage() {
                     updateMutation.mutate({ status: selectedStatus })
                   }}
                   disabled={updateMutation.isPending}
-                  className="mt-2 rounded-lg bg-sky-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-sky-500 disabled:opacity-60"
+                  className="mt-2 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-500 disabled:opacity-60"
                 >
                   {updateMutation.isPending ? 'Saving...' : `Change to ${selectedStatus.replace('_', ' ')}`}
                 </button>
@@ -276,6 +300,7 @@ export function IssueDetailPage() {
             <div className="flex flex-col justify-end">
               <button
                 type="button"
+                onClick={() => setShowAssignModal(true)}
                 className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-500"
               >
                 + Create Task &amp; Assign Worker
@@ -284,8 +309,8 @@ export function IssueDetailPage() {
           </div>
         </section>
 
-        <section className="rounded-xl border border-slate-800 bg-slate-900/60 p-5">
-          <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-sky-400">
+        <section className="rounded-xl border border-cir-border bg-cir-surface/60 p-5">
+          <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-emerald-400">
             Community Activity
           </h3>
           <div className="mb-4 flex items-center gap-4">
@@ -304,7 +329,7 @@ export function IssueDetailPage() {
               {comments.map((comment) => (
                 <div
                   key={comment.id}
-                  className="rounded-lg border border-slate-700/50 bg-slate-950/40 px-4 py-3"
+                  className="rounded-lg border border-cir-border-subtle/50 bg-cir-bg/40 px-4 py-3"
                 >
                   <p className="text-sm text-slate-200">{comment.body}</p>
                   <p className="mt-1 text-xs text-slate-500">
@@ -316,8 +341,37 @@ export function IssueDetailPage() {
           )}
         </section>
 
-        <section className="rounded-xl border border-slate-800 bg-slate-900/60 p-5">
-          <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-sky-400">
+        <section className="rounded-xl border border-cir-border bg-cir-surface/60 p-5">
+          <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-emerald-400">
+            Public Resolution Note
+          </h3>
+          <form
+            className="flex gap-2"
+            onSubmit={(e) => {
+              e.preventDefault()
+              if (!publicNote.trim()) return
+              publicNoteMutation.mutate(publicNote.trim())
+            }}
+          >
+            <input
+              type="text"
+              value={publicNote}
+              onChange={(e) => setPublicNote(e.target.value)}
+              placeholder="Visible on public issue detail when resolved..."
+              className="flex-1 rounded-lg border border-cir-border-subtle bg-cir-input px-3 py-2 text-sm text-white outline-none focus:border-emerald-500"
+            />
+            <button
+              type="submit"
+              disabled={publicNoteMutation.isPending || !publicNote.trim()}
+              className="rounded-lg bg-emerald-600 px-4 py-2 text-sm text-white hover:bg-emerald-500 disabled:opacity-60"
+            >
+              Add note
+            </button>
+          </form>
+        </section>
+
+        <section className="rounded-xl border border-cir-border bg-cir-surface/60 p-5">
+          <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-emerald-400">
             Activity Log
           </h3>
           {activity.length === 0 ? (
@@ -328,7 +382,7 @@ export function IssueDetailPage() {
             <div className="space-y-2">
               {activity.map((entry) => (
                 <div key={entry.id} className="flex items-start gap-3 text-sm">
-                  <span className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-sky-500" />
+                  <span className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
                   <div>
                     <p className="text-slate-200">{entry.action}</p>
                     <p className="text-xs text-slate-500">
@@ -341,6 +395,14 @@ export function IssueDetailPage() {
           )}
         </section>
       </div>
+
+      {showAssignModal ? (
+        <AssignWorkerModal
+          issue={issue}
+          onClose={() => setShowAssignModal(false)}
+          onSuccess={() => setSuccessMessage('Worker assigned and task created. Issue status set to Assigned.')}
+        />
+      ) : null}
     </div>
   )
 }

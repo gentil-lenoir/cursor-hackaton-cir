@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import {
   clearSession,
   fetchCurrentUser,
@@ -10,7 +10,7 @@ import {
 } from '@/api/client'
 import type { AuthSession, User } from '@/types'
 
-interface AuthContextValue {
+export interface AuthContextValue {
   user: User | null
   isLoading: boolean
   isAuthenticated: boolean
@@ -20,7 +20,7 @@ interface AuthContextValue {
   logout: () => Promise<void>
 }
 
-const AuthContext = createContext<AuthContextValue | null>(null)
+export const AuthContext = createContext<AuthContextValue | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<AuthSession | null>(() => getSession())
@@ -55,19 +55,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginEmail = useCallback(async (email: string, password: string) => {
     const next = await loginWithEmail(email, password)
-    if (next.user.role !== 'admin') {
-      clearSession()
-      throw new Error('Only admin accounts can access this application.')
-    }
     setSession(next)
   }, [])
 
   const loginOtp = useCallback(async (phone: string, code: string) => {
     const next = await loginWithOtp(phone, code)
-    if (next.user.role !== 'admin') {
-      clearSession()
-      throw new Error('Only admin accounts can access this application.')
-    }
     setSession(next)
   }, [])
 
@@ -94,12 +86,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-}
-
-export function useAuth(): AuthContextValue {
-  const context = useContext(AuthContext)
-  if (!context) {
-    throw new Error('useAuth must be used within AuthProvider')
-  }
-  return context
 }

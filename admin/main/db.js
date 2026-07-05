@@ -70,10 +70,52 @@ function createTables() {
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
   `);
+
+  seedDefaults();
+}
+
+const DEFAULT_SETTINGS = {
+  theme_preference: 'light',
+  language: 'en',
+  admin_name: 'Administrator',
+  admin_email: 'admin@cir.rw',
+  admin_phone: '+250788000000',
+  notify_email: 'true',
+  notify_sms: 'false',
+  notify_new_issues: 'true',
+  notify_escalations: 'true',
+  notify_daily_summary: 'false',
+  default_issue_priority: '3',
+  escalation_days: '7',
+  auto_assign_issues: 'false',
+  municipality_name: 'Kigali Municipal Office',
+  default_district: 'Kigali',
+  districts: 'Kigali,Nyarugenge,Gasabo,Kicukiro',
+  public_note_template: 'Your issue has been reviewed and updated by the municipal team.',
+  api_base_url: 'http://127.0.0.1:8000/api',
+  sync_on_startup: 'false',
+};
+
+function seedDefaults() {
+  const insertSetting = db.prepare(`
+    INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)
+  `);
+
+  for (const [key, value] of Object.entries(DEFAULT_SETTINGS)) {
+    insertSetting.run(key, value);
+  }
+
+  const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get().count;
+  if (userCount === 0) {
+    db.prepare(`
+      INSERT INTO users (name, email, password, theme_preference)
+      VALUES (?, ?, ?, ?)
+    `).run('Administrator', 'admin@cir.rw', 'admin123', 'light');
+  }
 }
 
 function getDatabase() {
   return db;
 }
 
-module.exports = { initDatabase, getDatabase };
+module.exports = { initDatabase, getDatabase, DEFAULT_SETTINGS };

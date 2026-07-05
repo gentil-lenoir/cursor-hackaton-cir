@@ -77,6 +77,132 @@ export interface Worker {
   active_task_count?: number
 }
 
+export interface Task {
+  id: number
+  issue_id: number
+  issue_title: string
+  issue_reference: string
+  district: string
+  assigned_to: number
+  assigned_to_name: string
+  title: string
+  admin_notes: string | null
+  status: TaskStatus
+  due_date: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface TaskStep {
+  id: number
+  title: string
+  description: string | null
+  order: number
+  is_completed: boolean
+  completed_at: string | null
+}
+
+export interface TaskComment {
+  id: number
+  user_id: number
+  author_name: string
+  body: string
+  type: 'comment' | 'clarification_request'
+  created_at: string
+}
+
+export interface TaskDetail extends Task {
+  steps: TaskStep[]
+  comments: TaskComment[]
+}
+
+export interface CreateTaskPayload {
+  issue_id: number
+  assigned_to: number
+  due_date?: string
+  admin_notes?: string
+  steps?: string[]
+}
+
+export interface UpdateTaskPayload {
+  status?: TaskStatus
+  assigned_to?: number
+  due_date?: string | null
+  admin_notes?: string | null
+}
+
+export interface InviteWorkerPayload {
+  name: string
+  phone: string
+}
+
+export interface UpdateWorkerPayload {
+  status: UserStatus
+}
+
+export interface BulkUpdateIssuesPayload {
+  issue_ids: number[]
+  status: IssueStatus
+}
+
+export interface CreateTaskCommentPayload {
+  body: string
+  type?: 'comment' | 'clarification_request'
+}
+
+export interface CreatePublicNotePayload {
+  body: string
+}
+
+export interface AnalyticsOverview {
+  total_open_issues: number
+  resolved_this_month: number
+  avg_resolution_days: number
+  active_workers: number
+  issues_by_district: Array<{ district: string; count: number }>
+  issues_by_category: Array<{ category: string; count: number }>
+}
+
+export interface FlaggedComment {
+  id: number
+  issue_id: number
+  issue_reference: string
+  issue_title: string
+  user_id: number
+  author_name: string
+  body: string
+  flagged_count: number
+  is_visible: boolean
+  comment_banned: boolean
+  created_at: string
+}
+
+export interface PriorityWeights {
+  citizen: number
+  ai: number
+  community: number
+}
+
+export interface NotificationTemplates {
+  issue_status_changed: string
+  task_assigned: string
+  issue_resolved: string
+}
+
+export interface AdminSettings {
+  priority_weights: PriorityWeights
+  ai_prompt_template: string
+  notification_templates: NotificationTemplates
+  districts: string[]
+}
+
+export interface UpdateAdminSettingsPayload {
+  priority_weights?: PriorityWeights
+  ai_prompt_template?: string
+  notification_templates?: NotificationTemplates
+  districts?: string[]
+}
+
 export interface ApiResponse<T> {
   data: T
   message?: string

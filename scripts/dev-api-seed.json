@@ -1,0 +1,264 @@
+{
+  "admin": {
+    "id": 1,
+    "name": "Jean Mukamana",
+    "phone": "+250788123456",
+    "email": "admin@cir.rw",
+    "password": "password",
+    "role": "admin",
+    "status": "active",
+    "language": "en"
+  },
+  "issues": [
+    {
+      "id": 1,
+      "reference_number": "CIR-2026-00001",
+      "reporter_name": "Eric Nshimiyimana",
+      "title": "Large pothole on KG 11 Ave near market",
+      "description": "There is a deep pothole near the market causing accidents for vehicles and pedestrians. It has been growing for weeks.",
+      "district": "Gasabo",
+      "sector": "Remera",
+      "status": "submitted",
+      "citizen_priority": 4,
+      "ai_priority": 4,
+      "ai_category": "roads",
+      "ai_summary": "Deep pothole on KG 11 Ave near market in Gasabo. Safety hazard for vehicles and pedestrians.",
+      "ai_tags": ["pothole", "accident-risk", "market-area"],
+      "ai_confidence": 0.87,
+      "community_score": 12,
+      "final_priority": 4.2,
+      "admin_priority_override": null,
+      "latitude": -1.9441,
+      "longitude": 30.0619,
+      "resolved_at": null,
+      "created_at": "2026-07-01T08:30:00Z",
+      "updated_at": "2026-07-01T09:15:00Z"
+    },
+    {
+      "id": 2,
+      "reference_number": "CIR-2026-00002",
+      "reporter_name": "Marie Uwase",
+      "title": "Broken water pipe flooding street in Kicukiro",
+      "description": "A main water pipe burst on Friday. Water is flooding the road and entering nearby homes.",
+      "district": "Kicukiro",
+      "sector": "Niboye",
+      "status": "under_review",
+      "citizen_priority": 5,
+      "ai_priority": 5,
+      "ai_category": "water",
+      "ai_summary": "Burst water main in Kicukiro causing flooding and property damage. Urgent repair needed.",
+      "ai_tags": ["burst-pipe", "flooding", "water-supply"],
+      "ai_confidence": 0.92,
+      "community_score": 18,
+      "final_priority": 4.8,
+      "admin_priority_override": null,
+      "latitude": -1.9891,
+      "longitude": 30.1122,
+      "resolved_at": null,
+      "created_at": "2026-07-02T14:20:00Z",
+      "updated_at": "2026-07-02T15:00:00Z"
+    },
+    {
+      "id": 3,
+      "reference_number": "CIR-2026-00003",
+      "reporter_name": "Anonymous Citizen",
+      "title": "Uncollected garbage near Nyabugogo bus station",
+      "description": "Garbage has not been collected for over a week. Bad smell and rats in the area.",
+      "district": "Nyarugenge",
+      "sector": "Nyakabanda",
+      "status": "assigned",
+      "citizen_priority": 3,
+      "ai_priority": 3,
+      "ai_category": "sanitation",
+      "ai_summary": "Uncollected waste near Nyabugogo bus station posing health and sanitation risks.",
+      "ai_tags": ["garbage", "sanitation", "bus-station"],
+      "ai_confidence": 0.81,
+      "community_score": 7,
+      "final_priority": 3.1,
+      "admin_priority_override": null,
+      "latitude": -1.9397,
+      "longitude": 30.0444,
+      "resolved_at": null,
+      "created_at": "2026-06-28T10:00:00Z",
+      "updated_at": "2026-07-03T11:30:00Z"
+    },
+    {
+      "id": 4,
+      "reference_number": "CIR-2026-00004",
+      "reporter_name": "Patrick Habimana",
+      "title": "Street lights not working on KN 3 Rd",
+      "description": "Multiple street lights have been out for two weeks. Area is very dark at night.",
+      "district": "Gasabo",
+      "sector": "Kimironko",
+      "status": "in_progress",
+      "citizen_priority": 3,
+      "ai_priority": 2,
+      "ai_category": "electricity",
+      "ai_summary": "Multiple street lights out on KN 3 Rd in Gasabo. Safety concern for nighttime pedestrians.",
+      "ai_tags": ["street-lights", "safety", "nighttime"],
+      "ai_confidence": 0.75,
+      "community_score": 4,
+      "final_priority": 2.8,
+      "admin_priority_override": 3,
+      "latitude": -1.9706,
+      "longitude": 30.1044,
+      "resolved_at": null,
+      "created_at": "2026-06-25T18:45:00Z",
+      "updated_at": "2026-07-04T09:00:00Z"
+    },
+    {
+      "id": 5,
+      "reference_number": "CIR-2026-00005",
+      "reporter_name": "Claire Mutoni",
+      "title": "Damaged bridge railing in Huye district",
+      "description": "The railing on the small bridge near the university is broken. Students use this path daily.",
+      "district": "Huye",
+      "sector": "Tumba",
+      "status": "resolved",
+      "citizen_priority": 4,
+      "ai_priority": 4,
+      "ai_category": "roads",
+      "ai_summary": "Broken bridge railing in Huye near university campus. Risk of falls for daily commuters.",
+      "ai_tags": ["bridge", "safety", "university"],
+      "ai_confidence": 0.88,
+      "community_score": 9,
+      "final_priority": 4.0,
+      "admin_priority_override": null,
+      "latitude": -2.5967,
+      "longitude": 29.7386,
+      "resolved_at": "2026-07-04T16:00:00Z",
+      "created_at": "2026-06-20T07:30:00Z",
+      "updated_at": "2026-07-04T16:00:00Z"
+    }
+  ],
+  "comments": {
+    "1": [
+      { "id": 1, "user_id": 10, "body": "I drive through this area daily — the pothole is getting worse.", "created_at": "2026-07-01T12:00:00Z" },
+      { "id": 2, "user_id": 11, "body": "A motorcycle almost crashed here yesterday evening.", "created_at": "2026-07-02T08:30:00Z" }
+    ],
+    "2": [
+      { "id": 3, "user_id": 12, "body": "Water has entered my ground floor. Please hurry.", "created_at": "2026-07-02T16:00:00Z" }
+    ]
+  },
+  "activity": {
+    "1": [
+      { "id": 1, "user_id": null, "action": "Issue submitted", "metadata": { "status": "submitted" }, "created_at": "2026-07-01T08:30:00Z" },
+      { "id": 2, "user_id": null, "action": "AI triage completed", "metadata": { "ai_category": "roads", "ai_priority": 4 }, "created_at": "2026-07-01T09:15:00Z" }
+    ],
+    "2": [
+      { "id": 3, "user_id": 1, "action": "Status changed to under_review", "metadata": { "from": "submitted", "to": "under_review" }, "created_at": "2026-07-02T15:00:00Z" }
+    ]
+  },
+  "workers": [
+    { "id": 2, "name": "Emmanuel Niyonsaba", "phone": "+250788111222", "status": "active", "active_task_count": 2 },
+    { "id": 3, "name": "Grace Uwimana", "phone": "+250788333444", "status": "active", "active_task_count": 1 },
+    { "id": 4, "name": "David Nkurunziza", "phone": "+250788555666", "status": "invited", "active_task_count": 0 }
+  ],
+  "tasks": [
+    {
+      "id": 101,
+      "issue_id": 3,
+      "issue_title": "Uncollected garbage near Nyabugogo bus station",
+      "issue_reference": "CIR-2026-00003",
+      "district": "Nyarugenge",
+      "assigned_to": 2,
+      "assigned_to_name": "Emmanuel Niyonsaba",
+      "title": "Sanitation cleanup — Nyabugogo",
+      "admin_notes": "Coordinate with district sanitation team.",
+      "status": "in_progress",
+      "due_date": "2026-07-10",
+      "created_at": "2026-07-03T11:30:00Z",
+      "updated_at": "2026-07-04T08:00:00Z"
+    },
+    {
+      "id": 102,
+      "issue_id": 4,
+      "issue_title": "Street lights not working on KN 3 Rd",
+      "issue_reference": "CIR-2026-00004",
+      "district": "Gasabo",
+      "assigned_to": 3,
+      "assigned_to_name": "Grace Uwimana",
+      "title": "Repair street lights — KN 3 Rd",
+      "admin_notes": "Check transformer box near junction.",
+      "status": "todo",
+      "due_date": "2026-07-12",
+      "created_at": "2026-07-04T09:00:00Z",
+      "updated_at": "2026-07-04T09:00:00Z"
+    }
+  ],
+  "flagged_comments": [
+    {
+      "id": 101,
+      "issue_id": 1,
+      "issue_reference": "CIR-2026-00001",
+      "issue_title": "Large pothole on KG 11 Ave near market",
+      "user_id": 10,
+      "author_name": "Jean Paul",
+      "body": "Officials never fix anything here. They only care about photo ops.",
+      "flagged_count": 4,
+      "is_visible": true,
+      "comment_banned": false,
+      "created_at": "2026-07-03T09:15:00Z"
+    },
+    {
+      "id": 102,
+      "issue_id": 2,
+      "issue_reference": "CIR-2026-00002",
+      "issue_title": "Broken water pipe flooding street in Kicukiro",
+      "user_id": 11,
+      "author_name": "Anonymous Citizen",
+      "body": "Spam link: http://fake-deals.example — click for free water tanks!!!",
+      "flagged_count": 6,
+      "is_visible": false,
+      "comment_banned": false,
+      "created_at": "2026-07-02T18:40:00Z"
+    },
+    {
+      "id": 103,
+      "issue_id": 3,
+      "issue_reference": "CIR-2026-00003",
+      "issue_title": "Uncollected garbage near Nyabugogo bus station",
+      "user_id": 12,
+      "author_name": "Alice Mukamana",
+      "body": "This area smells terrible and nobody is doing anything about it.",
+      "flagged_count": 3,
+      "is_visible": true,
+      "comment_banned": false,
+      "created_at": "2026-06-29T14:00:00Z"
+    }
+  ],
+  "task_steps": {
+    "101": [
+      { "id": 1, "title": "Inspect site", "description": null, "order": 1, "is_completed": true, "completed_at": "2026-07-04T08:00:00Z" },
+      { "id": 2, "title": "Coordinate cleanup crew", "description": null, "order": 2, "is_completed": true, "completed_at": "2026-07-04T10:00:00Z" },
+      { "id": 3, "title": "Submit report", "description": null, "order": 3, "is_completed": false, "completed_at": null }
+    ],
+    "102": [
+      { "id": 4, "title": "Inspect transformer box", "description": null, "order": 1, "is_completed": false, "completed_at": null },
+      { "id": 5, "title": "Replace bulbs", "description": null, "order": 2, "is_completed": false, "completed_at": null }
+    ]
+  },
+  "task_comments": {
+    "101": [
+      { "id": 1, "user_id": 2, "author_name": "Emmanuel Niyonsaba", "body": "Team on site. Garbage pile is larger than expected.", "type": "comment", "created_at": "2026-07-04T09:00:00Z" }
+    ],
+    "102": [
+      { "id": 2, "user_id": 3, "author_name": "Grace Uwimana", "body": "Need access key for junction box.", "type": "clarification_request", "created_at": "2026-07-04T11:00:00Z" }
+    ]
+  },
+  "settings": {
+    "priority_weights": { "citizen": 0.3, "ai": 0.4, "community": 0.3 },
+    "ai_prompt_template": "You are a civic issue triage assistant for Rwanda.\n\nAnalyze the citizen report and respond with JSON:\n- category (roads|water|electricity|sanitation|health|education|security|environment|other)\n- tags (array of strings)\n- summary (1-2 sentences, public-safe)\n- priority (1-5 integer)\n- confidence (0-1 float)\n\nIssue title: {title}\nDescription: {description}\nDistrict: {district}",
+    "notification_templates": {
+      "issue_status_changed": "Your report {reference} status is now {status}. Track progress in the CIR app.",
+      "task_assigned": "New task assigned: {title} in {district}. Due date in worker app.",
+      "issue_resolved": "Good news! Your report {reference} has been resolved. Thank you for helping improve your community."
+    },
+    "districts": [
+      "Gasabo", "Kicukiro", "Nyarugenge", "Burera", "Gakenke", "Gicumbi", "Musanze", "Rulindo",
+      "Gisagara", "Huye", "Kamonyi", "Muhanga", "Nyamagabe", "Nyanza", "Nyaruguru", "Ruhango",
+      "Bugesera", "Gatsibo", "Kayonza", "Kirehe", "Ngoma", "Nyagatare", "Rwamagana",
+      "Karongi", "Ngororero", "Nyabihu", "Nyamasheke", "Rubavu", "Rusizi", "Rutsiro"
+    ]
+  }
+}

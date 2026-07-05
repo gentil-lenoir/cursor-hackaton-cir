@@ -2,7 +2,7 @@ import { ISSUE_STATUS_LABELS, PRIORITY_COLORS, type IssueStatus } from '@/types'
 
 export function PriorityBadge({ priority }: { priority: number | null }) {
   if (priority == null) {
-    return <span className="rounded-full bg-slate-700 px-2 py-0.5 text-xs text-slate-300">N/A</span>
+    return <span className="rounded-full bg-cir-elevated px-2 py-0.5 text-xs text-slate-300">N/A</span>
   }
 
   const rounded = Math.max(1, Math.min(5, Math.round(priority)))
@@ -22,7 +22,7 @@ export function StatusBadge({ status }: { status: IssueStatus }) {
     assigned: 'bg-cyan-500/20 text-cyan-300',
     in_progress: 'bg-amber-500/20 text-amber-300',
     resolved: 'bg-emerald-500/20 text-emerald-300',
-    closed: 'bg-slate-500/20 text-slate-300',
+    closed: 'bg-cir-elevated/60 text-slate-300',
     rejected: 'bg-red-500/20 text-red-300'
   }
 
@@ -43,7 +43,7 @@ export function PageHeader({
   actions?: React.ReactNode
 }) {
   return (
-    <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-800 px-8 py-6">
+    <div className="flex flex-wrap items-start justify-between gap-4 border-b border-cir-border px-8 py-6">
       <div>
         <h2 className="text-2xl font-semibold text-white">{title}</h2>
         {description ? <p className="mt-1 text-sm text-slate-400">{description}</p> : null}
@@ -55,7 +55,7 @@ export function PageHeader({
 
 export function EmptyState({ title, description }: { title: string; description: string }) {
   return (
-    <div className="rounded-xl border border-dashed border-slate-700 bg-slate-900/40 px-6 py-12 text-center">
+    <div className="rounded-xl border border-dashed border-cir-border-subtle bg-cir-surface/40 px-6 py-12 text-center">
       <h3 className="text-lg font-medium text-white">{title}</h3>
       <p className="mt-2 text-sm text-slate-400">{description}</p>
     </div>

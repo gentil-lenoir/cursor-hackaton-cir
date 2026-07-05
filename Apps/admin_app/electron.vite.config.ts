@@ -26,6 +26,16 @@ export default defineConfig({
   },
   renderer: {
     root: resolve(__dirname, 'src/renderer'),
+    server: {
+      host: true,
+      port: 5173,
+      proxy: {
+        '/api': {
+          target: process.env.VITE_API_PROXY_TARGET ?? 'http://192.168.10.211:8000',
+          changeOrigin: true
+        }
+      }
+    },
     build: {
       rollupOptions: {
         input: {

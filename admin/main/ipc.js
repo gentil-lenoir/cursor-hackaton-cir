@@ -14,8 +14,31 @@ function setupIPC() {
         in_progress_issues: db.prepare("SELECT COUNT(*) as count FROM issues WHERE status = 'in_progress'").get().count,
         resolved_issues: db.prepare("SELECT COUNT(*) as count FROM issues WHERE status = 'resolved'").get().count,
         overdue_issues: db.prepare("SELECT COUNT(*) as count FROM issues WHERE status IN ('reported', 'in_progress') AND julianday(updated_at) < julianday('now', '-7 days')").get().count,
+        total_issues: db.prepare('SELECT COUNT(*) as count FROM issues').get().count,
       };
-      return { success: true, data: stats };
+      stats.open_issues = stats.reported_issues + stats.in_progress_issues;
+      stats.resolution_rate = stats.total_issues
+        ? Math.round((stats.resolved_issues / stats.total_issues) * 100)
+        : 0;
+
+      const byStatus = db.prepare(`
+        SELECT status, COUNT(*) as count FROM issues GROUP BY status ORDER BY count DESC
+      `).all();
+
+      const byCategory = db.prepare(`
+        SELECT COALESCE(NULLIF(category, ''), 'General') as label, COUNT(*) as count
+        FROM issues GROUP BY label ORDER BY count DESC LIMIT 6
+      `).all();
+
+      const byDepartment = db.prepare(`
+        SELECT COALESCE(d.name, 'Unassigned') as label, COUNT(i.id) as count
+        FROM issues i
+        LEFT JOIN workers w ON i.worker_id = w.id
+        LEFT JOIN departments d ON w.department_id = d.id
+        GROUP BY label ORDER BY count DESC LIMIT 6
+      `).all();
+
+      return { success: true, data: { ...stats, by_status: byStatus, by_category: byCategory, by_department: byDepartment } };
     } catch (err) {
       return { success: false, error: err.message };
     }
@@ -256,6 +279,87 @@ function setupIPC() {
         SET title = ?, description = ?, category = ?, status = ?, worker_id = ?, updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
       `).run(issue.title, issue.description, issue.category, issue.status, issue.worker_id || null, id);
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+
+  // Settings
+  ipcMain.handle('settings:get', () => {
+    const db = getDatabase();
+    const { DEFAULT_SETTINGS } = require('./db');
+    try {
+      const rows = db.prepare('SELECT key, value FROM settings').all();
+      const settings = { ...DEFAULT_SETTINGS };
+      rows.forEach((row) => {
+        settings[row.key] = row.value;
+      });
+
+      const admin = db.prepare('SELECT id, name, email, theme_preference FROM users ORDER BY id LIMIT 1').get();
+      if (admin) {
+        settings.admin_name = admin.name;
+        settings.admin_email = admin.email;
+        settings.theme_preference = admin.theme_preference || settings.theme_preference;
+      }
+
+      return { success: true, data: settings };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+
+  ipcMain.handle('settings:save', (event, payload) => {
+    const db = getDatabase();
+    try {
+      const upsert = db.prepare(`
+        INSERT INTO settings (key, value, updated_at)
+        VALUES (?, ?, CURRENT_TIMESTAMP)
+        ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = CURRENT_TIMESTAMP
+      `);
+
+      const accountKeys = ['admin_name', 'admin_email', 'theme_preference'];
+      const settingsPayload = { ...payload };
+      const admin = db.prepare('SELECT id FROM users ORDER BY id LIMIT 1').get();
+
+      if (admin) {
+        db.prepare(`
+          UPDATE users
+          SET name = ?, email = ?, theme_preference = ?
+          WHERE id = ?
+        `).run(
+          settingsPayload.admin_name || 'Administrator',
+          settingsPayload.admin_email || admin.email,
+          settingsPayload.theme_preference || 'light',
+          admin.id
+        );
+      }
+
+      Object.entries(settingsPayload).forEach(([key, value]) => {
+        if (accountKeys.includes(key)) return;
+        upsert.run(key, String(value ?? ''));
+      });
+
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+
+  ipcMain.handle('settings:changePassword', (event, { currentPassword, newPassword }) => {
+    const db = getDatabase();
+    try {
+      const admin = db.prepare('SELECT id, password FROM users ORDER BY id LIMIT 1').get();
+      if (!admin) {
+        return { success: false, error: 'No admin account found.' };
+      }
+      if (admin.password !== currentPassword) {
+        return { success: false, error: 'Current password is incorrect.' };
+      }
+      if (!newPassword || newPassword.length < 6) {
+        return { success: false, error: 'New password must be at least 6 characters.' };
+      }
+      db.prepare('UPDATE users SET password = ? WHERE id = ?').run(newPassword, admin.id);
       return { success: true };
     } catch (err) {
       return { success: false, error: err.message };
