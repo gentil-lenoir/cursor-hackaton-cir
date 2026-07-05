@@ -79,14 +79,22 @@ function mapIssue(issue) {
     priority: issue.priority,
     worker_id: issue.worker?.id || issue.assignment?.worker?.id || null,
     worker_name: issue.worker?.name || issue.assignment?.worker?.name || null,
-    department_name: issue.worker?.department || null,
-    address: issue.location?.address || null,
+    department_name: issue.worker?.department || issue.worker?.department_name || null,
+    address: issue.location?.address || issue.address || null,
+    latitude: issue.location?.latitude ?? null,
+    longitude: issue.location?.longitude ?? null,
     reporter_name: issue.reporter?.name || null,
+    reporter_id: issue.reporter?.id || null,
     likes_count: issue.likes_count ?? 0,
     dislikes_count: issue.dislikes_count ?? 0,
     comments_count: issue.comments_count ?? 0,
+    deadline: issue.deadline || issue.assignment?.deadline_at?.slice(0, 10) || null,
+    images: Array.isArray(issue.images)
+      ? issue.images.map((img) => ({ id: img.id, url: img.url }))
+      : [],
     created_at: issue.created_at || issue.reported_at,
     updated_at: issue.updated_at,
+    reported_at: issue.reported_at || issue.created_at,
   };
 }
 
@@ -296,6 +304,34 @@ async function deleteDepartment(id) {
   await getClient().delete(`/admin/departments/${id}`);
 }
 
+async function getIssueDetail(id) {
+  await ensureAuthenticated();
+
+  const response = await getClient().get(`/admin/issues/${id}`);
+  const issue = response.data?.data || response.data;
+
+  return mapIssue(issue);
+}
+
+async function assignIssue(id, assignment) {
+  await ensureAuthenticated();
+
+  const payload = {
+    worker_id: Number(assignment.worker_id),
+    deadline: assignment.deadline,
+    status: assignment.status || 'in_progress',
+  };
+
+  if (assignment.priority) {
+    payload.priority = assignment.priority;
+  }
+
+  const response = await getClient().patch(`/admin/issues/${id}/assign`, payload);
+  const issue = response.data?.data || response.data;
+
+  return mapIssue(issue);
+}
+
 async function updateIssue(id, issue) {
   await ensureAuthenticated();
 
@@ -322,6 +358,8 @@ module.exports = {
   createDepartment,
   updateDepartment,
   deleteDepartment,
+  getIssueDetail,
+  assignIssue,
   updateIssue,
   mapIssue,
   mapWorker,

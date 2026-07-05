@@ -1,6 +1,8 @@
 let currentTab = 'dashboard';
 let currentWorkerId = null;
 let currentDepartmentId = null;
+let currentIssueId = null;
+let currentAssignWorkerId = null;
 
 // Tab navigation
 document.querySelectorAll('.sidebar-link').forEach(link => {
@@ -163,6 +165,7 @@ async function loadWorkers() {
                         <td><span class="badge badge-${worker.status}">${worker.status}</span></td>
                         <td><span class="badge badge-${worker.availability_status === 'available' ? 'resolved' : 'in-progress'}">${worker.availability_status}</span></td>
                         <td>
+                            <button class="btn btn-primary" style="font-size: 11px; padding: 6px 12px;" onclick="openWorkerAssignModal(${worker.id})">Assign</button>
                             <button class="btn btn-secondary" style="font-size: 11px; padding: 6px 12px;" onclick="editWorker(${worker.id})">Edit</button>
                             <button class="btn btn-secondary" style="font-size: 11px; padding: 6px 12px;" onclick="deleteWorker(${worker.id})">Delete</button>
                         </td>
@@ -384,8 +387,260 @@ function escapeHtml(value = '') {
 }
 
 function viewIssue(id) {
-    alert('Issue view not yet implemented');
+    openIssueModal(id);
 }
+
+async function openIssueModal(id) {
+    currentIssueId = id;
+    openModal('issueModal');
+
+    document.getElementById('issueModalLoading').style.display = 'block';
+    document.getElementById('issueModalContent').style.display = 'none';
+    document.getElementById('issueAssignFeedback').className = 'feedback-message';
+    document.getElementById('issueAssignFeedback').textContent = '';
+
+    try {
+        const [issueResult, workersResult] = await Promise.all([
+            window.electronAPI.getIssueDetail(id),
+            window.electronAPI.listWorkers({ page: 1, limit: 100, status: 'active' }),
+        ]);
+
+        if (!issueResult.success) {
+            alert('Error loading issue: ' + issueResult.error);
+            closeModal('issueModal');
+            return;
+        }
+
+        populateIssueModal(issueResult.data, workersResult.success ? workersResult.data.workers : []);
+    } catch (err) {
+        alert('Error: ' + err.message);
+        closeModal('issueModal');
+    }
+}
+
+function populateIssueModal(issue, workers) {
+    document.getElementById('issueModalTitle').textContent = issue.title;
+    document.getElementById('issueModalSubtitle').textContent = `Issue #${issue.id}`;
+
+    const statusEl = document.getElementById('issueDetailStatus');
+    statusEl.textContent = formatStatus(issue.status);
+    statusEl.className = `badge badge-${issue.status.replace('_', '-')}`;
+
+    const priorityEl = document.getElementById('issueDetailPriority');
+    priorityEl.textContent = issue.priority ? formatStatus(issue.priority) : '-';
+    priorityEl.className = issue.priority ? `badge badge-${issue.priority}` : 'badge';
+
+    document.getElementById('issueDetailCategory').textContent = issue.category || '-';
+    document.getElementById('issueDetailReported').textContent = formatDate(issue.reported_at || issue.created_at);
+    document.getElementById('issueDetailReporter').textContent = issue.reporter_name || 'Unknown';
+    document.getElementById('issueDetailLocation').textContent = issue.address || '-';
+    document.getElementById('issueDetailWorker').textContent = issue.worker_name
+        ? `${issue.worker_name}${issue.department_name ? ` (${issue.department_name})` : ''}`
+        : 'Unassigned';
+    document.getElementById('issueDetailDeadline').textContent = issue.deadline ? formatDate(issue.deadline) : '-';
+    document.getElementById('issueDetailDescription').textContent = issue.description || '-';
+
+    document.getElementById('issueDetailStats').innerHTML = `
+        <span>👍 ${issue.likes_count} likes</span>
+        <span>👎 ${issue.dislikes_count} dislikes</span>
+        <span>💬 ${issue.comments_count} comments</span>
+    `;
+
+    const imagesContainer = document.getElementById('issueDetailImages');
+    if (issue.images && issue.images.length > 0) {
+        imagesContainer.innerHTML = issue.images
+            .map((img) => `<img src="${escapeHtml(img.url)}" alt="Issue image">`)
+            .join('');
+        imagesContainer.style.display = 'flex';
+    } else {
+        imagesContainer.innerHTML = '';
+        imagesContainer.style.display = 'none';
+    }
+
+    const workerSelect = document.getElementById('issueAssignWorker');
+    workerSelect.innerHTML = '<option value="">Select a worker...</option>';
+    workers.forEach((worker) => {
+        const selected = issue.worker_id === worker.id ? ' selected' : '';
+        workerSelect.innerHTML += `<option value="${worker.id}"${selected}>${escapeHtml(worker.name)}${worker.department_name ? ` — ${escapeHtml(worker.department_name)}` : ''}</option>`;
+    });
+
+    document.getElementById('issueAssignDeadline').value = issue.deadline || defaultDeadlineDate();
+    document.getElementById('issueAssignStatus').value = normalizeIssueStatus(issue.status);
+    document.getElementById('issueAssignPriority').value = issue.priority || 'medium';
+    document.getElementById('issueAssignSubmit').textContent = issue.worker_id ? 'Update Assignment' : 'Assign';
+
+    document.getElementById('issueModalLoading').style.display = 'none';
+    document.getElementById('issueModalContent').style.display = 'block';
+}
+
+function defaultDeadlineDate() {
+    const date = new Date();
+    date.setDate(date.getDate() + 7);
+    return date.toISOString().slice(0, 10);
+}
+
+function normalizeIssueStatus(status) {
+    if (['reported', 'in_progress', 'resolved'].includes(status)) {
+        return status;
+    }
+
+    return 'in_progress';
+}
+
+function showAssignFeedback(message, type) {
+    const el = document.getElementById('issueAssignFeedback');
+    el.textContent = message;
+    el.className = `feedback-message ${type}`;
+}
+
+document.getElementById('issueAssignForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    if (!currentIssueId) {
+        return;
+    }
+
+    const assignment = {
+        worker_id: document.getElementById('issueAssignWorker').value,
+        deadline: document.getElementById('issueAssignDeadline').value,
+        status: document.getElementById('issueAssignStatus').value,
+        priority: document.getElementById('issueAssignPriority').value,
+    };
+
+    if (!assignment.worker_id) {
+        showAssignFeedback('Please select a worker.', 'error');
+        return;
+    }
+
+    const submitBtn = document.getElementById('issueAssignSubmit');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Saving...';
+
+    const result = await window.electronAPI.assignIssue(currentIssueId, assignment);
+
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Update Assignment';
+
+    if (result.success) {
+        showAssignFeedback('Issue assigned successfully.', 'success');
+        populateIssueModal(result.data, await loadActiveWorkers());
+        loadIssues();
+        if (currentTab === 'dashboard') {
+            loadDashboard();
+        }
+    } else {
+        showAssignFeedback(result.error || 'Assignment failed.', 'error');
+    }
+});
+
+async function loadActiveWorkers() {
+    const result = await window.electronAPI.listWorkers({ page: 1, limit: 100, status: 'active' });
+    return result.success ? result.data.workers : [];
+}
+
+function showWorkerAssignFeedback(message, type) {
+    const el = document.getElementById('workerAssignFeedback');
+    el.textContent = message;
+    el.className = `feedback-message ${type}`;
+}
+
+async function openWorkerAssignModal(workerId) {
+    currentAssignWorkerId = workerId;
+
+    const workersResult = await window.electronAPI.listWorkers({ page: 1, limit: 100 });
+    const worker = workersResult.success
+        ? workersResult.data.workers.find((w) => w.id === workerId)
+        : null;
+    const workerName = worker?.name || 'Worker';
+
+    document.getElementById('workerAssignTitle').textContent = `Assign Task to ${workerName}`;
+    document.getElementById('workerAssignSubtitle').textContent = 'Select an issue and set assignment details';
+    document.getElementById('workerAssignFeedback').className = 'feedback-message';
+    document.getElementById('workerAssignFeedback').textContent = '';
+    document.getElementById('workerAssignDeadline').value = defaultDeadlineDate();
+    document.getElementById('workerAssignStatus').value = 'in_progress';
+    document.getElementById('workerAssignPriority').value = 'medium';
+
+    openModal('workerAssignModal');
+    document.getElementById('workerAssignLoading').style.display = 'block';
+    document.getElementById('workerAssignContent').style.display = 'none';
+
+    try {
+        const result = await window.electronAPI.listIssues({ page: 1, limit: 100 });
+
+        if (!result.success) {
+            alert('Error loading issues: ' + result.error);
+            closeModal('workerAssignModal');
+            return;
+        }
+
+        const issueSelect = document.getElementById('workerAssignIssue');
+        issueSelect.innerHTML = '<option value="">Select an issue...</option>';
+
+        const assignableIssues = result.data.issues.filter((issue) => issue.status !== 'resolved');
+
+        if (assignableIssues.length === 0) {
+            issueSelect.innerHTML = '<option value="">No open issues available</option>';
+            issueSelect.disabled = true;
+        } else {
+            issueSelect.disabled = false;
+            assignableIssues.forEach((issue) => {
+                const assignedLabel = issue.worker_name ? ` (assigned to ${issue.worker_name})` : ' (unassigned)';
+                issueSelect.innerHTML += `<option value="${issue.id}">#${issue.id} — ${escapeHtml(issue.title)}${escapeHtml(assignedLabel)}</option>`;
+            });
+        }
+
+        document.getElementById('workerAssignLoading').style.display = 'none';
+        document.getElementById('workerAssignContent').style.display = 'block';
+    } catch (err) {
+        alert('Error: ' + err.message);
+        closeModal('workerAssignModal');
+    }
+}
+
+document.getElementById('workerAssignForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    if (!currentAssignWorkerId) {
+        return;
+    }
+
+    const issueId = document.getElementById('workerAssignIssue').value;
+    if (!issueId) {
+        showWorkerAssignFeedback('Please select an issue.', 'error');
+        return;
+    }
+
+    const assignment = {
+        worker_id: currentAssignWorkerId,
+        deadline: document.getElementById('workerAssignDeadline').value,
+        status: document.getElementById('workerAssignStatus').value,
+        priority: document.getElementById('workerAssignPriority').value,
+    };
+
+    const submitBtn = document.getElementById('workerAssignSubmit');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Assigning...';
+
+    const result = await window.electronAPI.assignIssue(Number(issueId), assignment);
+
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Assign Task';
+
+    if (result.success) {
+        showWorkerAssignFeedback('Task assigned successfully.', 'success');
+        loadWorkers();
+        if (currentTab === 'issues') {
+            loadIssues();
+        }
+        if (currentTab === 'dashboard') {
+            loadDashboard();
+        }
+        setTimeout(() => closeModal('workerAssignModal'), 800);
+    } else {
+        showWorkerAssignFeedback(result.error || 'Assignment failed.', 'error');
+    }
+});
 
 // Initial load
 document.getElementById('issueSearch')?.addEventListener('input', () => {

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AdminDepartmentController;
+use App\Http\Controllers\Api\AdminIssueController;
 use App\Http\Controllers\Api\AdminWorkerController;
 use App\Http\Controllers\Api\AssignmentController;
 use App\Http\Controllers\Api\AuthController;
@@ -57,6 +58,9 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::post('/departments', [AdminDepartmentController::class, 'store']);
         Route::put('/departments/{department}', [AdminDepartmentController::class, 'update']);
         Route::delete('/departments/{department}', [AdminDepartmentController::class, 'destroy']);
+
+        Route::get('/issues/{issue}', [AdminIssueController::class, 'show']);
+        Route::patch('/issues/{issue}/assign', [AdminIssueController::class, 'assign']);
     });
 
     Route::get('/worker/dashboard', [WorkerController::class, 'dashboard'])

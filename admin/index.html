@@ -381,6 +381,105 @@
             margin: 8px 0 0 0;
         }
 
+        .modal-content.modal-wide {
+            max-width: 820px;
+        }
+
+        .issue-detail-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .issue-detail-item label {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 4px;
+        }
+
+        .issue-detail-item p {
+            font-size: 14px;
+            color: #0f172a;
+            margin: 0;
+        }
+
+        .issue-description {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #334155;
+            margin-bottom: 24px;
+        }
+
+        .issue-images {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .issue-images img {
+            width: 120px;
+            height: 90px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .issue-stats {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        .assign-section {
+            border-top: 1px solid #e2e8f0;
+            padding-top: 24px;
+            margin-top: 8px;
+        }
+
+        .assign-section h4 {
+            font-size: 16px;
+            font-weight: 700;
+            margin: 0 0 16px 0;
+            color: #0f172a;
+        }
+
+        .feedback-message {
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            margin-top: 12px;
+            display: none;
+        }
+
+        .feedback-message.success {
+            display: block;
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .feedback-message.error {
+            display: block;
+            background: #fee2e2;
+            color: #7f1d1d;
+        }
+
+        .badge-low { background: #f1f5f9; color: #475569; }
+        .badge-medium { background: #fef3c7; color: #92400e; }
+        .badge-high { background: #fed7aa; color: #9a3412; }
+        .badge-urgent { background: #fee2e2; color: #7f1d1d; }
+
         .form-group {
             margin-bottom: 20px;
         }
@@ -778,6 +877,154 @@
                     <button type="submit" class="btn btn-primary">Save Department</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <div class="modal-backdrop" id="issueModal">
+        <div class="modal-content modal-wide">
+            <div class="modal-header">
+                <h3 id="issueModalTitle">Issue Details</h3>
+                <p id="issueModalSubtitle">View issue information and assign a worker</p>
+            </div>
+
+            <div id="issueModalLoading" style="text-align: center; padding: 40px;">
+                <div class="spinner"></div>
+                <p style="margin-top: 12px; color: #64748b;">Loading issue...</p>
+            </div>
+
+            <div id="issueModalContent" style="display: none;">
+                <div class="issue-detail-grid">
+                    <div class="issue-detail-item">
+                        <label>Status</label>
+                        <p><span id="issueDetailStatus" class="badge"></span></p>
+                    </div>
+                    <div class="issue-detail-item">
+                        <label>Priority</label>
+                        <p><span id="issueDetailPriority" class="badge"></span></p>
+                    </div>
+                    <div class="issue-detail-item">
+                        <label>Category</label>
+                        <p id="issueDetailCategory">-</p>
+                    </div>
+                    <div class="issue-detail-item">
+                        <label>Reported</label>
+                        <p id="issueDetailReported">-</p>
+                    </div>
+                    <div class="issue-detail-item">
+                        <label>Reporter</label>
+                        <p id="issueDetailReporter">-</p>
+                    </div>
+                    <div class="issue-detail-item">
+                        <label>Location</label>
+                        <p id="issueDetailLocation">-</p>
+                    </div>
+                    <div class="issue-detail-item">
+                        <label>Assigned Worker</label>
+                        <p id="issueDetailWorker">Unassigned</p>
+                    </div>
+                    <div class="issue-detail-item">
+                        <label>Deadline</label>
+                        <p id="issueDetailDeadline">-</p>
+                    </div>
+                </div>
+
+                <div class="issue-detail-item" style="margin-bottom: 12px;">
+                    <label>Description</label>
+                </div>
+                <div class="issue-description" id="issueDetailDescription">-</div>
+
+                <div class="issue-stats" id="issueDetailStats"></div>
+                <div class="issue-images" id="issueDetailImages"></div>
+
+                <div class="assign-section">
+                    <h4>Assign Worker</h4>
+                    <form id="issueAssignForm" class="grid-2">
+                        <div class="form-group">
+                            <label>Worker</label>
+                            <select id="issueAssignWorker" required>
+                                <option value="">Select a worker...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Deadline</label>
+                            <input type="date" id="issueAssignDeadline" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select id="issueAssignStatus" required>
+                                <option value="reported">Reported</option>
+                                <option value="in_progress">In Progress</option>
+                                <option value="resolved">Resolved</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Priority</label>
+                            <select id="issueAssignPriority">
+                                <option value="low">Low</option>
+                                <option value="medium">Medium</option>
+                                <option value="high">High</option>
+                                <option value="urgent">Urgent</option>
+                            </select>
+                        </div>
+                        <div class="form-actions" style="grid-column: 1/-1;">
+                            <button type="button" class="btn btn-secondary" onclick="closeModal('issueModal')">Close</button>
+                            <button type="submit" class="btn btn-primary" id="issueAssignSubmit">Assign</button>
+                        </div>
+                    </form>
+                    <div id="issueAssignFeedback" class="feedback-message"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-backdrop" id="workerAssignModal">
+        <div class="modal-content modal-wide">
+            <div class="modal-header">
+                <h3 id="workerAssignTitle">Assign Task</h3>
+                <p id="workerAssignSubtitle">Choose an issue to assign to this worker</p>
+            </div>
+
+            <div id="workerAssignLoading" style="text-align: center; padding: 40px;">
+                <div class="spinner"></div>
+                <p style="margin-top: 12px; color: #64748b;">Loading issues...</p>
+            </div>
+
+            <div id="workerAssignContent" style="display: none;">
+                <form id="workerAssignForm" class="grid-2">
+                    <div class="form-group" style="grid-column: 1/-1;">
+                        <label>Issue / Task</label>
+                        <select id="workerAssignIssue" required>
+                            <option value="">Select an issue...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Deadline</label>
+                        <input type="date" id="workerAssignDeadline" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="workerAssignStatus" required>
+                            <option value="in_progress">In Progress</option>
+                            <option value="reported">Reported</option>
+                            <option value="resolved">Resolved</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Priority</label>
+                        <select id="workerAssignPriority">
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                            <option value="urgent">Urgent</option>
+                        </select>
+                    </div>
+                    <div class="form-actions" style="grid-column: 1/-1;">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal('workerAssignModal')">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="workerAssignSubmit">Assign Task</button>
+                    </div>
+                </form>
+                <div id="workerAssignFeedback" class="feedback-message"></div>
+            </div>
         </div>
     </div>
 

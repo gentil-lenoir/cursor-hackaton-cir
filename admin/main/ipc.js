@@ -192,6 +192,24 @@ function setupIPC() {
     }
   });
 
+  ipcMain.handle('issues:getDetail', async (event, id) => {
+    try {
+      const data = await apiClient.getIssueDetail(id);
+      return { success: true, data };
+    } catch (err) {
+      return { success: false, error: apiClient.formatApiError(err) };
+    }
+  });
+
+  ipcMain.handle('issues:assign', async (event, { id, assignment }) => {
+    try {
+      const data = await apiClient.assignIssue(id, assignment);
+      return { success: true, data };
+    } catch (err) {
+      return { success: false, error: apiClient.formatApiError(err) };
+    }
+  });
+
   ipcMain.handle('issues:update', async (event, { id, issue }) => {
     try {
       await apiClient.updateIssue(id, issue);

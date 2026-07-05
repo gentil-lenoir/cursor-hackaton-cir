@@ -21,14 +21,15 @@ function createWindow () {
 }
 
 app.whenReady().then(() => {
+  setupIPC()
+
   try {
     initDatabase()
-    setupIPC()
-    createWindow()
   } catch (error) {
-    console.error('Failed to start admin app:', error.message)
-    app.quit()
+    console.warn('Local database unavailable (API mode still works):', error.message)
   }
+
+  createWindow()
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {

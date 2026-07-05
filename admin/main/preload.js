@@ -21,5 +21,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Issues
   listIssues: (params) => ipcRenderer.invoke('issues:list', params),
+  getIssueDetail: (id) => ipcRenderer.invoke('issues:getDetail', id),
+  assignIssue: (id, assignment) => ipcRenderer.invoke('issues:assign', { id, assignment }),
   updateIssue: (id, issue) => ipcRenderer.invoke('issues:update', { id, issue })
 })
