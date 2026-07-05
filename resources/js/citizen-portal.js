@@ -1,3 +1,10 @@
+import {
+    clearAuthState,
+    getToken,
+    migrateLegacyAuthStorage,
+    setUser,
+} from './auth-storage';
+
 const citizenConfig = () => {
     const body = document.body;
 
@@ -16,7 +23,6 @@ const citizenConfig = () => {
     };
 };
 
-const getToken = () => localStorage.getItem('token') || '';
 const getStoredSettings = () => {
     try {
         return JSON.parse(localStorage.getItem('citizen_settings') || '{}');
@@ -30,12 +36,7 @@ const setStoredSettings = (settings) => {
 };
 
 const setStoredUser = (user) => {
-    localStorage.setItem('user', JSON.stringify(user));
-};
-
-const removeAuthState = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    setUser(user);
 };
 
 const applyTheme = (settings = {}) => {
@@ -123,6 +124,8 @@ const requireCitizenAuth = async () => {
         return null;
     }
 
+    migrateLegacyAuthStorage();
+
     const token = getToken();
 
     if (!token) {
@@ -135,7 +138,7 @@ const requireCitizenAuth = async () => {
         const user = payload.user || payload.data?.user || null;
 
         if (!user || user.role !== 'citizen') {
-            removeAuthState();
+            clearAuthState();
             window.location.assign(config.loginUrl);
             return null;
         }
@@ -143,8 +146,11 @@ const requireCitizenAuth = async () => {
         setStoredUser(user);
 
         return user;
-    } catch {
-        removeAuthState();
+    } catch (error) {
+        if (error.status === 401 || error.status === 403) {
+            clearAuthState();
+        }
+
         window.location.assign(config.loginUrl);
         return null;
     }
@@ -640,7 +646,7 @@ const bindLogout = () => {
                 // Ignore logout API failures on the client.
             }
 
-            removeAuthState();
+            clearAuthState();
             window.location.assign(citizenConfig().loginUrl);
         });
     });

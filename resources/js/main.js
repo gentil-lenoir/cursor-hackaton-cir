@@ -1,8 +1,18 @@
+import { getToken, migrateLegacyAuthStorage } from './auth-storage';
+import { logout, syncAuthenticatedUser } from './auth.js';
+
 const DEFAULT_FALLBACK_IMAGE =
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 500'%3E%3Crect width='800' height='500' fill='%23e2e8f0'/%3E%3Ccircle cx='250' cy='180' r='60' fill='%2394a3b8'/%3E%3Cpath d='M120 390l150-130 85 75 115-125 210 180H120z' fill='%2364758b'/%3E%3Ctext x='50%25' y='90%25' text-anchor='middle' font-family='Public Sans, sans-serif' font-size='30' fill='%230f172a'%3EIssue image unavailable%3C/text%3E%3C/svg%3E";
 
-function getToken() {
-    return localStorage.getItem('jwt_token') || localStorage.getItem('token') || '';
+function getLandingConfig() {
+    const body = document.body;
+
+    return {
+        apiMeUrl: body.dataset.apiMeUrl || '/api/me',
+        loginUrl: body.dataset.loginUrl || '/login',
+        dashboardCitizenUrl: body.dataset.dashboardCitizenUrl || '/citizen',
+        reportIssueUrl: body.dataset.reportIssueUrl || '/citizen/report',
+    };
 }
 
 function redirectToLogin(url) {
@@ -43,12 +53,35 @@ async function fetchJson(url, { authRequired = false } = {}) {
     return payload;
 }
 
-function handleAuthUI() {
-    const guestLinks = document.querySelectorAll('.auth-guest-link');
-
-    guestLinks.forEach((link) => {
-        link.classList.remove('hidden');
+function setAuthButtonVisibility(isCitizenAuthenticated) {
+    document.querySelectorAll('.auth-guest-link').forEach((link) => {
+        link.classList.toggle('hidden', isCitizenAuthenticated);
     });
+
+    document.querySelectorAll('.auth-citizen-link').forEach((link) => {
+        link.classList.toggle('hidden', !isCitizenAuthenticated);
+    });
+}
+
+async function handleAuthUI() {
+    migrateLegacyAuthStorage();
+
+    const config = getLandingConfig();
+    const token = getToken();
+
+    if (!token) {
+        setAuthButtonVisibility(false);
+        return null;
+    }
+
+    const user = await syncAuthenticatedUser({
+        apiMeUrl: config.apiMeUrl,
+    });
+
+    const isCitizenAuthenticated = user?.role === 'citizen';
+    setAuthButtonVisibility(isCitizenAuthenticated);
+
+    return isCitizenAuthenticated ? user : null;
 }
 
 function renderIssueCard(issue) {
@@ -194,20 +227,20 @@ async function fetchStats() {
     }
 }
 
-function handleCTAButtons() {
+function handleCTAButtons(user = null) {
+    const config = getLandingConfig();
+    const isCitizenAuthenticated = user?.role === 'citizen';
     const reportButton = document.getElementById('report-issue-btn');
     const getStartedButton = document.getElementById('get-started-btn');
     const mapButton = document.getElementById('view-map-btn');
     const browseButton = document.getElementById('browse-issues-btn');
 
     reportButton?.addEventListener('click', () => {
-        const loginUrl = reportButton.dataset.loginUrl || '/login';
-        window.location.href = loginUrl;
+        window.location.href = isCitizenAuthenticated ? config.reportIssueUrl : config.loginUrl;
     });
 
     getStartedButton?.addEventListener('click', () => {
-        const loginUrl = getStartedButton.dataset.loginUrl || '/login';
-        window.location.href = loginUrl;
+        window.location.href = isCitizenAuthenticated ? config.dashboardCitizenUrl : config.loginUrl;
     });
 
     mapButton?.addEventListener('click', () => {
@@ -215,13 +248,25 @@ function handleCTAButtons() {
     });
 
     browseButton?.addEventListener('click', () => {
-        window.location.href = browseButton.dataset.issuesUrl || '/citizen/my-issues';
+        window.location.href = isCitizenAuthenticated
+            ? browseButton.dataset.issuesUrl || '/citizen/my-issues'
+            : config.loginUrl;
+    });
+}
+
+function bindLogoutButtons() {
+    document.querySelectorAll('[data-auth-logout]').forEach((button) => {
+        button.addEventListener('click', async (event) => {
+            event.preventDefault();
+            await logout(button.dataset.redirectUrl || getLandingConfig().loginUrl);
+        });
     });
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-    handleAuthUI();
-    handleCTAButtons();
+    const user = await handleAuthUI();
+    bindLogoutButtons();
+    handleCTAButtons(user);
     applyImageFallbacks();
     await Promise.all([fetchIssues(), fetchStats()]);
 });
