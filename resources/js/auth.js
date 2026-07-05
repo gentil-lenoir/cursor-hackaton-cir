@@ -40,6 +40,14 @@ function sanitizeValue(value) {
     return typeof value === 'string' ? value.trim() : value;
 }
 
+function normalizeWorkerName(value) {
+    return typeof value === 'string' ? value.trim().replace(/\s+/g, ' ') : value;
+}
+
+function normalizeWorkerEmail(value) {
+    return typeof value === 'string' ? value.trim().toLowerCase() : value;
+}
+
 function sanitizeFormData(formData) {
     const cleaned = {};
 
@@ -270,6 +278,14 @@ function validateRegisterForm(form) {
 function validateWorkerLoginForm(form) {
     const data = sanitizeFormData(Object.fromEntries(new FormData(form).entries()));
     let isValid = true;
+
+    if (data.name) {
+        data.name = normalizeWorkerName(data.name);
+    }
+
+    if (data.email) {
+        data.email = normalizeWorkerEmail(data.email);
+    }
 
     if (!data.name) {
         setFieldError(form, 'name', 'Name is required.');

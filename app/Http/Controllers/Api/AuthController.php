@@ -103,24 +103,35 @@ class AuthController extends Controller
             'email' => ['required', 'email', 'max:255'],
         ]);
 
+        $normalizedEmail = $this->normalizeWorkerEmail($validated['email']);
+        $normalizedName = $this->normalizeWorkerName($validated['name']);
+
         $worker = Worker::query()
             ->with('department')
-            ->where('email', $validated['email'])
-            ->whereRaw('LOWER(name) = ?', [mb_strtolower(trim($validated['name']))])
+            ->whereRaw('LOWER(TRIM(email)) = ?', [$normalizedEmail])
             ->first();
 
         if (! $worker) {
             return response()->json([
-                'message' => 'No worker account matches that name and email.',
+                'message' => 'No worker account found for that email. Ask your municipal manager to register your worker profile before signing in.',
                 'errors' => [
-                    'email' => ['Check your name and email, then try again.'],
+                    'email' => ['Use the work email assigned in the web admin portal.'],
+                ],
+            ], 422);
+        }
+
+        if ($this->normalizeWorkerName($worker->name) !== $normalizedName) {
+            return response()->json([
+                'message' => 'That email is registered, but the name does not match our records. Enter your full registered name exactly as shown to your manager.',
+                'errors' => [
+                    'name' => ['Use the exact full name on your worker profile.'],
                 ],
             ], 422);
         }
 
         if ($worker->status !== Worker::STATUS_ACTIVE) {
             return response()->json([
-                'message' => 'This worker account is inactive. Please contact the municipal manager.',
+                'message' => 'This worker account is inactive. Please contact the municipal manager to reactivate your account.',
             ], 403);
         }
 
@@ -162,6 +173,18 @@ class AuthController extends Controller
                 'user' => $this->formatAuthenticatedPrincipal($principal),
             ],
         ]);
+    }
+
+    private function normalizeWorkerEmail(string $email): string
+    {
+        return mb_strtolower(trim($email));
+    }
+
+    private function normalizeWorkerName(string $name): string
+    {
+        $collapsed = preg_replace('/\s+/u', ' ', trim($name));
+
+        return mb_strtolower($collapsed ?? trim($name));
     }
 
     private function formatAuthenticatedPrincipal(?Authenticatable $principal): array|null

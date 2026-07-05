@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Api\AdminDepartmentController;
+use App\Http\Controllers\Api\AdminWorkerController;
 use App\Http\Controllers\Api\AssignmentController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CitizenPortalController;
@@ -42,6 +44,20 @@ Route::middleware('auth:sanctum')->group(function (): void {
 
     Route::post('/municipal-manager/assign-issue', [AssignmentController::class, 'assignIssue'])
         ->middleware('role:municipal_manager');
+
+    Route::middleware('role:municipal_manager')->prefix('admin')->group(function (): void {
+        Route::get('/stats', [AdminWorkerController::class, 'stats']);
+        Route::get('/workers', [AdminWorkerController::class, 'index']);
+        Route::post('/workers', [AdminWorkerController::class, 'store']);
+        Route::put('/workers/{worker}', [AdminWorkerController::class, 'update']);
+        Route::delete('/workers/{worker}', [AdminWorkerController::class, 'destroy']);
+        Route::patch('/workers/{worker}/toggle-status', [AdminWorkerController::class, 'toggleStatus']);
+
+        Route::get('/departments', [AdminDepartmentController::class, 'index']);
+        Route::post('/departments', [AdminDepartmentController::class, 'store']);
+        Route::put('/departments/{department}', [AdminDepartmentController::class, 'update']);
+        Route::delete('/departments/{department}', [AdminDepartmentController::class, 'destroy']);
+    });
 
     Route::get('/worker/dashboard', [WorkerController::class, 'dashboard'])
         ->middleware('role:worker');

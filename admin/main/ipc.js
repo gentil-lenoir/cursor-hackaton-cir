@@ -1,18 +1,25 @@
 const { ipcMain } = require('electron');
-const { getDatabase } = require('./db');
 const apiClient = require('./api-client');
 const { loadConfig } = require('./config');
 
 function setupIPC() {
   // Dashboard stats
   ipcMain.handle('dashboard:getStats', async () => {
-    const db = getDatabase();
     try {
-      const local = {
-        workers: db.prepare('SELECT COUNT(*) as count FROM workers').get().count,
-        active_workers: db.prepare("SELECT COUNT(*) as count FROM workers WHERE status = 'active'").get().count,
-        departments: db.prepare('SELECT COUNT(*) as count FROM departments').get().count,
+      let adminStats = {
+        workers: 0,
+        active_workers: 0,
+        departments: 0,
       };
+
+      try {
+        adminStats = await apiClient.getAdminStats();
+      } catch (apiError) {
+        return {
+          success: false,
+          error: `Could not load worker stats from API (${loadConfig().apiBaseUrl}): ${apiClient.formatApiError(apiError)}`,
+        };
+      }
 
       let issueStats = {
         reported_issues: 0,
@@ -41,14 +48,14 @@ function setupIPC() {
       } catch (apiError) {
         return {
           success: false,
-          error: `Could not load issues from API (${loadConfig().apiBaseUrl}): ${apiError.message}`,
+          error: `Could not load issues from API (${loadConfig().apiBaseUrl}): ${apiClient.formatApiError(apiError)}`,
         };
       }
 
       return {
         success: true,
         data: {
-          ...local,
+          ...adminStats,
           ...issueStats,
         },
       };
@@ -65,181 +72,110 @@ function setupIPC() {
     } catch (err) {
       return {
         success: false,
-        error: `Could not load issues from API (${loadConfig().apiBaseUrl}): ${err.message}`,
+        error: `Could not load issues from API (${loadConfig().apiBaseUrl}): ${apiClient.formatApiError(err)}`,
       };
     }
   });
 
   // Top workers
-  ipcMain.handle('workers:getTop', () => {
-    const db = getDatabase();
+  ipcMain.handle('workers:getTop', async () => {
     try {
-      const workers = db.prepare(`
-        SELECT w.*, d.name as department_name, COUNT(i.id) as issues_count
-        FROM workers w
-        LEFT JOIN departments d ON w.department_id = d.id
-        LEFT JOIN issues i ON w.id = i.worker_id
-        GROUP BY w.id
-        ORDER BY issues_count DESC
-        LIMIT 5
-      `).all();
+      const workers = await apiClient.getTopWorkers(5);
       return { success: true, data: workers };
     } catch (err) {
-      return { success: false, error: err.message };
+      return {
+        success: false,
+        error: `Could not load workers from API (${loadConfig().apiBaseUrl}): ${apiClient.formatApiError(err)}`,
+      };
     }
   });
 
   // Workers list
-  ipcMain.handle('workers:list', (event, { search, department, status, page = 1, limit = 10 }) => {
-    const db = getDatabase();
+  ipcMain.handle('workers:list', async (event, { search, department, status, page = 1, limit = 10 }) => {
     try {
-      let query = `
-        SELECT w.*, d.name as department_name
-        FROM workers w
-        LEFT JOIN departments d ON w.department_id = d.id
-        WHERE 1=1
-      `;
-      const params = [];
-
-      if (search) {
-        query += ` AND (w.name LIKE ? OR w.email LIKE ?)`;
-        params.push(`%${search}%`, `%${search}%`);
-      }
-      if (department) {
-        query += ` AND w.department_id = ?`;
-        params.push(department);
-      }
-      if (status) {
-        query += ` AND w.status = ?`;
-        params.push(status);
-      }
-
-      const offset = (page - 1) * limit;
-      const countStmt = db.prepare(`SELECT COUNT(*) as count FROM workers w LEFT JOIN departments d ON w.department_id = d.id WHERE 1=1 ${search ? 'AND (w.name LIKE ? OR w.email LIKE ?)' : ''} ${department ? 'AND w.department_id = ?' : ''} ${status ? 'AND w.status = ?' : ''}`);
-      const total = countStmt.get(...params).count;
-
-      query += ` LIMIT ? OFFSET ?`;
-      const stmt = db.prepare(query);
-      const workers = stmt.all(...params, limit, offset);
-
-      return { success: true, data: { workers, total, page, limit } };
+      const data = await apiClient.listWorkers({ search, department, status, page, limit });
+      return { success: true, data };
     } catch (err) {
-      return { success: false, error: err.message };
+      return {
+        success: false,
+        error: `Could not load workers from API (${loadConfig().apiBaseUrl}): ${apiClient.formatApiError(err)}`,
+      };
     }
   });
 
-  // Worker CRUD
-  ipcMain.handle('workers:create', (event, worker) => {
-    const db = getDatabase();
+  ipcMain.handle('workers:create', async (event, worker) => {
     try {
-      const stmt = db.prepare(`
-        INSERT INTO workers (name, email, phone, department_id, status, availability_status, theme_preference)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-      `);
-      const result = stmt.run(
-        worker.name,
-        worker.email,
-        worker.phone || null,
-        worker.department_id || null,
-        worker.status || 'active',
-        worker.availability_status || 'available',
-        worker.theme_preference || 'light'
-      );
-      return { success: true, data: { id: result.lastInsertRowid } };
+      const data = await apiClient.createWorker(worker);
+      return { success: true, data };
     } catch (err) {
-      return { success: false, error: err.message };
+      return { success: false, error: apiClient.formatApiError(err) };
     }
   });
 
-  ipcMain.handle('workers:update', (event, { id, worker }) => {
-    const db = getDatabase();
+  ipcMain.handle('workers:update', async (event, { id, worker }) => {
     try {
-      const stmt = db.prepare(`
-        UPDATE workers
-        SET name = ?, email = ?, phone = ?, department_id = ?, status = ?, availability_status = ?, theme_preference = ?, updated_at = CURRENT_TIMESTAMP
-        WHERE id = ?
-      `);
-      stmt.run(
-        worker.name,
-        worker.email,
-        worker.phone || null,
-        worker.department_id || null,
-        worker.status,
-        worker.availability_status,
-        worker.theme_preference,
-        id
-      );
+      await apiClient.updateWorker(id, worker);
       return { success: true };
     } catch (err) {
-      return { success: false, error: err.message };
+      return { success: false, error: apiClient.formatApiError(err) };
     }
   });
 
-  ipcMain.handle('workers:delete', (event, id) => {
-    const db = getDatabase();
+  ipcMain.handle('workers:delete', async (event, id) => {
     try {
-      db.prepare('DELETE FROM workers WHERE id = ?').run(id);
+      await apiClient.deleteWorker(id);
       return { success: true };
     } catch (err) {
-      return { success: false, error: err.message };
+      return { success: false, error: apiClient.formatApiError(err) };
     }
   });
 
-  ipcMain.handle('workers:toggleStatus', (event, id) => {
-    const db = getDatabase();
+  ipcMain.handle('workers:toggleStatus', async (event, id) => {
     try {
-      const worker = db.prepare('SELECT status FROM workers WHERE id = ?').get(id);
-      const newStatus = worker.status === 'active' ? 'inactive' : 'active';
-      db.prepare('UPDATE workers SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(newStatus, id);
-      return { success: true, data: { status: newStatus } };
+      const data = await apiClient.toggleWorkerStatus(id);
+      return { success: true, data };
     } catch (err) {
-      return { success: false, error: err.message };
+      return { success: false, error: apiClient.formatApiError(err) };
     }
   });
 
   // Departments
-  ipcMain.handle('departments:list', () => {
-    const db = getDatabase();
+  ipcMain.handle('departments:list', async () => {
     try {
-      const departments = db.prepare('SELECT * FROM departments ORDER BY name').all();
+      const departments = await apiClient.listDepartments();
       return { success: true, data: departments };
     } catch (err) {
-      return { success: false, error: err.message };
+      return {
+        success: false,
+        error: `Could not load departments from API (${loadConfig().apiBaseUrl}): ${apiClient.formatApiError(err)}`,
+      };
     }
   });
 
-  ipcMain.handle('departments:create', (event, dept) => {
-    const db = getDatabase();
+  ipcMain.handle('departments:create', async (event, dept) => {
     try {
-      const stmt = db.prepare(`
-        INSERT INTO departments (name, description)
-        VALUES (?, ?)
-      `);
-      const result = stmt.run(dept.name, dept.description || null);
-      return { success: true, data: { id: result.lastInsertRowid } };
+      const data = await apiClient.createDepartment(dept);
+      return { success: true, data };
     } catch (err) {
-      return { success: false, error: err.message };
+      return { success: false, error: apiClient.formatApiError(err) };
     }
   });
 
-  ipcMain.handle('departments:update', (event, { id, dept }) => {
-    const db = getDatabase();
+  ipcMain.handle('departments:update', async (event, { id, dept }) => {
     try {
-      db.prepare('UPDATE departments SET name = ?, description = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
-        .run(dept.name, dept.description || null, id);
+      await apiClient.updateDepartment(id, dept);
       return { success: true };
     } catch (err) {
-      return { success: false, error: err.message };
+      return { success: false, error: apiClient.formatApiError(err) };
     }
   });
 
-  ipcMain.handle('departments:delete', (event, id) => {
-    const db = getDatabase();
+  ipcMain.handle('departments:delete', async (event, id) => {
     try {
-      db.prepare('DELETE FROM departments WHERE id = ?').run(id);
+      await apiClient.deleteDepartment(id);
       return { success: true };
     } catch (err) {
-      return { success: false, error: err.message };
+      return { success: false, error: apiClient.formatApiError(err) };
     }
   });
 
@@ -251,7 +187,7 @@ function setupIPC() {
     } catch (err) {
       return {
         success: false,
-        error: `Could not load issues from API (${loadConfig().apiBaseUrl}): ${err.message}`,
+        error: `Could not load issues from API (${loadConfig().apiBaseUrl}): ${apiClient.formatApiError(err)}`,
       };
     }
   });
@@ -261,7 +197,7 @@ function setupIPC() {
       await apiClient.updateIssue(id, issue);
       return { success: true };
     } catch (err) {
-      return { success: false, error: err.message };
+      return { success: false, error: apiClient.formatApiError(err) };
     }
   });
 }

@@ -262,7 +262,7 @@ async function loadDepartments() {
                     row.innerHTML = `
                         <td>${dept.name}</td>
                         <td style="font-size: 12px; color: #64748b;">${dept.description || '-'}</td>
-                        <td>0</td>
+                        <td>${dept.workers_count ?? 0}</td>
                         <td>
                             <button class="btn btn-secondary" style="font-size: 11px; padding: 6px 12px;" onclick="editDepartment(${dept.id})">Edit</button>
                             <button class="btn btn-secondary" style="font-size: 11px; padding: 6px 12px;" onclick="deleteDepartment(${dept.id})">Delete</button>

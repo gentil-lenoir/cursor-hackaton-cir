@@ -17,7 +17,12 @@
         <div class="mb-8 text-center">
             <p class="cir-auth-logo"><span>CIR</span></p>
             <p class="cir-auth-tagline !mb-2">Worker Portal Access</p>
-            <p class="text-sm" style="color: var(--cir-text-muted)">Sign in with your registered name and email.</p>
+            <p class="text-sm" style="color: var(--cir-text-muted)">Sign in with your full registered name and work email.</p>
+            <p class="mt-3 rounded-xl border px-4 py-3 text-left text-xs leading-relaxed" style="border-color: var(--cir-border); color: var(--cir-text-muted); background: color-mix(in srgb, var(--cir-surface) 92%, transparent)">
+                <span class="font-semibold text-emerald-600">Demo account:</span>
+                Priya Sanitation · worker.sanitation@civic.local
+                <span class="mt-2 block">Workers must be registered in the web admin portal at <a class="font-semibold text-emerald-500 hover:text-emerald-400" href="{{ route('admin.workers.index') }}">/admin/workers</a>. Profiles created in the desktop admin app are stored locally and cannot sign in here.</span>
+            </p>
         </div>
 
         <div class="auth-alert hidden mb-6 rounded-xl px-4 py-3 text-sm" data-auth-alert style="background: var(--cir-error-bg); color: var(--cir-error-text); border: 1px solid var(--cir-error-border)"></div>

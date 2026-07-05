@@ -30,6 +30,22 @@ function getClient() {
   return client;
 }
 
+function formatApiError(error) {
+  if (error.response?.data?.message) {
+    const validationErrors = error.response.data.errors;
+
+    if (validationErrors && typeof validationErrors === 'object') {
+      const details = Object.values(validationErrors).flat().join(' ');
+
+      return details ? `${error.response.data.message} ${details}` : error.response.data.message;
+    }
+
+    return error.response.data.message;
+  }
+
+  return error.message;
+}
+
 async function ensureAuthenticated() {
   if (token) {
     return token;
@@ -74,6 +90,35 @@ function mapIssue(issue) {
   };
 }
 
+function mapWorker(worker) {
+  return {
+    id: worker.id,
+    name: worker.name,
+    email: worker.email,
+    phone: worker.phone || null,
+    department_id: worker.department_id || null,
+    department_name: worker.department_name || worker.department?.name || null,
+    status: worker.status || 'active',
+    availability_status: worker.availability_status || 'available',
+    theme_preference: worker.theme_preference || 'light',
+    issues_count: worker.issues_count ?? 0,
+    created_at: worker.created_at,
+    updated_at: worker.updated_at,
+  };
+}
+
+function mapDepartment(department) {
+  return {
+    id: department.id,
+    name: department.name,
+    code: department.code || null,
+    description: department.description || null,
+    workers_count: department.workers_count ?? 0,
+    created_at: department.created_at,
+    updated_at: department.updated_at,
+  };
+}
+
 async function listIssues({ search = '', status = '', page = 1, limit = 50 } = {}) {
   const params = {
     page,
@@ -105,6 +150,152 @@ async function getStats() {
   return response.data?.data || {};
 }
 
+async function getAdminStats() {
+  await ensureAuthenticated();
+
+  const response = await getClient().get('/admin/stats');
+  return response.data?.data || {};
+}
+
+async function listWorkers({ search = '', department = '', status = '', page = 1, limit = 10, sort = '' } = {}) {
+  await ensureAuthenticated();
+
+  const params = { page, limit };
+
+  if (search) {
+    params.search = search;
+  }
+
+  if (department) {
+    params.department = department;
+  }
+
+  if (status) {
+    params.status = status;
+  }
+
+  if (sort) {
+    params.sort = sort;
+  }
+
+  const response = await getClient().get('/admin/workers', { params });
+  const workers = Array.isArray(response.data?.data) ? response.data.data : [];
+  const meta = response.data?.meta || {};
+
+  return {
+    workers: workers.map(mapWorker),
+    total: meta.total ?? workers.length,
+    page: meta.current_page ?? page,
+    limit: meta.per_page ?? limit,
+  };
+}
+
+async function getTopWorkers(limit = 5) {
+  const data = await listWorkers({ limit, page: 1, sort: 'issues_count' });
+  return data.workers;
+}
+
+async function createWorker(worker) {
+  await ensureAuthenticated();
+
+  const payload = {
+    name: worker.name,
+    email: worker.email,
+    phone: worker.phone || null,
+    department_id: worker.department_id ? Number(worker.department_id) : null,
+    status: worker.status || 'active',
+    availability_status: worker.availability_status || 'available',
+    theme_preference: worker.theme_preference || 'light',
+  };
+
+  const response = await getClient().post('/admin/workers', payload);
+  const created = response.data?.data || response.data;
+
+  return {
+    id: created.id,
+    worker: mapWorker(created),
+  };
+}
+
+async function updateWorker(id, worker) {
+  await ensureAuthenticated();
+
+  const payload = {
+    name: worker.name,
+    email: worker.email,
+    phone: worker.phone || null,
+  };
+
+  if (worker.department_id) {
+    payload.department_id = Number(worker.department_id);
+  }
+
+  if (worker.status) {
+    payload.status = worker.status;
+  }
+
+  if (worker.availability_status) {
+    payload.availability_status = worker.availability_status;
+  }
+
+  if (worker.theme_preference) {
+    payload.theme_preference = worker.theme_preference;
+  }
+
+  await getClient().put(`/admin/workers/${id}`, payload);
+}
+
+async function deleteWorker(id) {
+  await ensureAuthenticated();
+  await getClient().delete(`/admin/workers/${id}`);
+}
+
+async function toggleWorkerStatus(id) {
+  await ensureAuthenticated();
+
+  const response = await getClient().patch(`/admin/workers/${id}/toggle-status`);
+  return response.data?.data || {};
+}
+
+async function listDepartments() {
+  await ensureAuthenticated();
+
+  const response = await getClient().get('/admin/departments');
+  const departments = Array.isArray(response.data?.data) ? response.data.data : [];
+
+  return departments.map(mapDepartment);
+}
+
+async function createDepartment(dept) {
+  await ensureAuthenticated();
+
+  const response = await getClient().post('/admin/departments', {
+    name: dept.name,
+    description: dept.description || null,
+  });
+
+  const created = response.data?.data || response.data;
+
+  return {
+    id: created.id,
+    department: mapDepartment(created),
+  };
+}
+
+async function updateDepartment(id, dept) {
+  await ensureAuthenticated();
+
+  await getClient().put(`/admin/departments/${id}`, {
+    name: dept.name,
+    description: dept.description || null,
+  });
+}
+
+async function deleteDepartment(id) {
+  await ensureAuthenticated();
+  await getClient().delete(`/admin/departments/${id}`);
+}
+
 async function updateIssue(id, issue) {
   await ensureAuthenticated();
 
@@ -120,6 +311,20 @@ module.exports = {
   ensureAuthenticated,
   listIssues,
   getStats,
+  getAdminStats,
+  listWorkers,
+  getTopWorkers,
+  createWorker,
+  updateWorker,
+  deleteWorker,
+  toggleWorkerStatus,
+  listDepartments,
+  createDepartment,
+  updateDepartment,
+  deleteDepartment,
   updateIssue,
   mapIssue,
+  mapWorker,
+  mapDepartment,
+  formatApiError,
 };
