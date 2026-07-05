@@ -5,6 +5,19 @@
 
     RewriteEngine On
 
+    # Ensure API preflight requests reach Laravel (shared hosting)
+    RewriteCond %{REQUEST_METHOD} OPTIONS
+    RewriteRule ^api/ - [L]
+
+    # CORS headers for API clients (Electron admin, SPA, browser tools)
+    <IfModule mod_headers.c>
+        Header always set Access-Control-Allow-Origin "*" env=CORS
+        Header always set Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS" env=CORS
+        Header always set Access-Control-Allow-Headers "Authorization, Content-Type, Accept, X-Requested-With, X-XSRF-TOKEN" env=CORS
+        Header always set Access-Control-Max-Age "86400" env=CORS
+        SetEnvIf Request_URI "^/api/" CORS=1
+    </IfModule>
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]

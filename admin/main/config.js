@@ -2,7 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const defaults = {
-  apiBaseUrl: 'http://127.0.0.1:8000/api',
+  apiBaseUrl: 'https://gentillenoir075.helioho.st/api',
   adminEmail: 'admin2004@gmail.com',
   adminPassword: 'admin123',
 };
