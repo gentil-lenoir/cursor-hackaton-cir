@@ -1,33 +1,33 @@
-<footer class="bg-white border-t border-navy-200 py-12 px-6 md:px-12 lg:px-24">
-    <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
+<footer class="cir-landing-footer py-12 px-6 md:px-12 lg:px-24">
+    <div class="mx-auto mb-12 grid max-w-7xl grid-cols-1 gap-12 md:grid-cols-3">
         <div>
             <div class="mb-6 flex items-center gap-3">
-                <div class="flex h-[48px] w-[48px] items-center justify-center rounded-2xl bg-linear-to-b from-[#21d4b4] to-primary text-white shadow-[0_18px_36px_rgba(16,185,129,0.28)]">
-                    <span class="material-symbols-outlined text-[26px] leading-none">location_city</span>
+                <div class="cir-logo-mark !h-12 !w-12">
+                    <span class="material-symbols-outlined text-2xl">location_city</span>
                 </div>
                 <div>
-                    <p class="text-[1.45rem] font-black leading-none tracking-[-0.05em] text-navy-900"><span class="text-primary">CIR</span></p>
-                    <p class="mt-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-navy-500">Smart Public Issue Reporting</p>
+                    <p class="text-xl font-black tracking-tight" style="color: var(--cir-text)"><span class="text-emerald-500">CIR</span></p>
+                    <p class="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.16em]" style="color: var(--cir-text-muted)">Smart Public Issue Reporting</p>
                 </div>
             </div>
-            <p class="text-navy-500 text-sm leading-relaxed max-w-xs">
-                Building the digital infrastructure for modern, responsive, and accountable city management.
+            <p class="max-w-xs text-sm leading-relaxed" style="color: var(--cir-text-muted)">
+                Building the digital infrastructure for modern, responsive, and accountable city management in Rwanda.
             </p>
         </div>
 
         <div>
-            <h5 class="font-bold text-navy-900 mb-4">Navigation</h5>
-            <ul class="space-y-3 text-sm text-navy-500">
-                <li><a class="hover:text-primary min-h-[32px] inline-flex items-center" href="#home">Home</a></li>
-                <li><a class="hover:text-primary min-h-[32px] inline-flex items-center" href="#about">About</a></li>
-                <li><a class="hover:text-primary min-h-[32px] inline-flex items-center" href="#users">Users</a></li>
-                <li><a class="hover:text-primary min-h-[32px] inline-flex items-center" href="#features">Features</a></li>
+            <h5 class="mb-4 font-bold" style="color: var(--cir-text)">Navigation</h5>
+            <ul class="space-y-3 text-sm" style="color: var(--cir-text-muted)">
+                <li><a class="inline-flex min-h-[32px] items-center transition hover:text-emerald-500" href="#home">Home</a></li>
+                <li><a class="inline-flex min-h-[32px] items-center transition hover:text-emerald-500" href="#about">About</a></li>
+                <li><a class="inline-flex min-h-[32px] items-center transition hover:text-emerald-500" href="#users">Users</a></li>
+                <li><a class="inline-flex min-h-[32px] items-center transition hover:text-emerald-500" href="#features">Features</a></li>
             </ul>
         </div>
 
         <div>
-            <h5 class="font-bold text-navy-900 mb-4">Why CIR</h5>
-            <ul class="space-y-3 text-sm text-navy-500">
+            <h5 class="mb-4 font-bold" style="color: var(--cir-text)">Why CIR</h5>
+            <ul class="space-y-3 text-sm" style="color: var(--cir-text-muted)">
                 <li>Transparent issue tracking</li>
                 <li>Faster department response</li>
                 <li>Community-powered prioritization</li>
@@ -36,11 +36,14 @@
         </div>
     </div>
 
-    <div class="max-w-7xl mx-auto pt-8 border-t border-navy-200 flex flex-col md:flex-row justify-between items-center gap-6">
-        <p class="text-xxl text-navy-400">&copy; 2026 CIR. For Cursor Hackaton | ALX.</p>
-        <div class="flex gap-8">
-            <span class="text-navy-400 cursor-pointer hover:text-primary text-xxl">Gentil M.</span>
-            <span class="text-navy-400 cursor-pointer hover:text-primary text-xxl">Nsanga V.</span>
+    <div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 border-t pt-8 md:flex-row" style="border-color: var(--cir-border)">
+        <p class="text-sm" style="color: var(--cir-text-faint)">&copy; 2026 CIR. For Cursor Hackaton | ALX.</p>
+        <div class="flex gap-8 text-sm" style="color: var(--cir-text-faint)">
+            <span class="cursor-pointer transition hover:text-emerald-500">Gentil M.</span>
+            <span class="cursor-pointer transition hover:text-emerald-500">Nsanga V.</span>
+            <span class="cursor-pointer transition hover:text-emerald-500">Parfait N.</span>
+            <span class="cursor-pointer transition hover:text-emerald-500">Noble M.</span>
+
         </div>
     </div>
 </footer>

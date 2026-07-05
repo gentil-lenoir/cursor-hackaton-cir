@@ -166,6 +166,7 @@ function setAlert(message, type = 'error') {
 function clearFieldErrors(form) {
     form.querySelectorAll('[data-field-error]').forEach((node) => {
         node.textContent = '';
+        node.classList.add('hidden');
     });
 
     form.querySelectorAll('.auth-input-error').forEach((node) => {
@@ -185,6 +186,7 @@ function setFieldError(form, field, message) {
 
     if (errorNode) {
         errorNode.textContent = message;
+        errorNode.classList.remove('hidden');
     }
 }
 

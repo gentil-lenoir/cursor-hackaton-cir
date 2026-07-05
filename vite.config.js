@@ -7,7 +7,7 @@ export default defineConfig({
         laravel({
             input: [
                 'resources/css/app.css',
-                'resources/css/style.css',
+                'resources/css/citizen-theme.css',
                 'resources/js/app.js',
                 'resources/js/auth.js',
                 'resources/js/main.js',
