@@ -68,3 +68,10 @@ export async function logout() {
         method: 'POST',
     });
 }
+
+export async function submitIssue(payload) {
+    return apiRequest('/api/v1/issues', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+    });
+}

@@ -19,6 +19,10 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleInertiaRequests::class,
         ]);
 
+        $middleware->alias([
+            'citizen' => \App\Http\Middleware\EnsureCitizen::class,
+        ]);
+
         $middleware->statefulApi();
 
         $middleware->redirectGuestsTo('/login');

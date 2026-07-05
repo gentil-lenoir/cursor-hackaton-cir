@@ -28,20 +28,27 @@ export default function Home() {
 
                         <div className="mt-8 flex flex-wrap gap-3">
                             {isLoggedIn ? (
-                                <Link
-                                    href="/dashboard"
-                                    className="rounded-xl bg-[var(--color-rw-yellow)] px-6 py-3 text-sm font-bold text-slate-900 shadow-lg transition hover:brightness-110"
-                                >
-                                    Go to dashboard
-                                </Link>
+                                <>
+                                    <Link
+                                        href="/report"
+                                        className="rounded-xl bg-[var(--color-rw-yellow)] px-6 py-3 text-sm font-bold text-slate-900 shadow-lg transition hover:brightness-110"
+                                    >
+                                        Report an issue
+                                    </Link>
+                                    <Link
+                                        href="/dashboard"
+                                        className="rounded-xl border border-white/20 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+                                    >
+                                        Go to dashboard
+                                    </Link>
+                                </>
                             ) : (
-                                <button
-                                    type="button"
-                                    onClick={() => setLoginOpen(true)}
+                                <Link
+                                    href="/report"
                                     className="rounded-xl bg-[var(--color-rw-yellow)] px-6 py-3 text-sm font-bold text-slate-900 shadow-lg transition hover:brightness-110"
                                 >
                                     Report an issue
-                                </button>
+                                </Link>
                             )}
                             <a
                                 href="#public-feed"

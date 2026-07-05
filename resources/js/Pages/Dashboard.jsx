@@ -1,7 +1,7 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import CitizenLayout from '../Layouts/CitizenLayout';
 
-export default function Dashboard() {
+export default function Dashboard({ issueCount = 0 }) {
     const { auth } = usePage().props;
     const user = auth?.user;
 
@@ -18,8 +18,8 @@ export default function Dashboard() {
                         Welcome{user?.name ? `, ${user.name}` : ''}
                     </h1>
                     <p className="mt-3 max-w-2xl text-slate-600">
-                        You are signed in as a citizen. Issue reporting, your submitted reports, and
-                        notifications will be available in the next phase.
+                        Report local issues, track their status, and follow community progress on public
+                        concerns across Rwanda.
                     </p>
 
                     <div className="mt-8 grid gap-4 md:grid-cols-3">
@@ -43,15 +43,20 @@ export default function Dashboard() {
                             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                                 My issues
                             </p>
-                            <p className="mt-2 text-3xl font-bold text-slate-900">0</p>
-                            <p className="mt-1 text-sm text-slate-500">No reports submitted yet</p>
+                            <p className="mt-2 text-3xl font-bold text-slate-900">{issueCount}</p>
+                            <p className="mt-1 text-sm text-slate-500">
+                                {issueCount === 1 ? 'Report submitted' : 'Reports submitted'}
+                            </p>
                         </div>
                     </div>
 
                     <div className="mt-8 flex flex-wrap gap-3">
-                        <span className="inline-flex cursor-not-allowed rounded-xl bg-slate-200 px-5 py-3 text-sm font-semibold text-slate-500">
-                            Report an issue (coming soon)
-                        </span>
+                        <Link
+                            href="/report"
+                            className="rounded-xl bg-[var(--color-rw-green)] px-5 py-3 text-sm font-semibold text-white transition hover:brightness-110"
+                        >
+                            Report an issue
+                        </Link>
                         <Link
                             href="/"
                             className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"

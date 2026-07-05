@@ -41,6 +41,12 @@ export default function CitizenLayout({ children }) {
                         {user ? (
                             <div className="flex items-center gap-3">
                                 <Link
+                                    href="/report"
+                                    className="hidden text-sm font-medium text-slate-700 hover:text-[var(--color-rw-blue)] sm:inline"
+                                >
+                                    Report
+                                </Link>
+                                <Link
                                     href="/dashboard"
                                     className="hidden text-sm font-medium text-slate-700 hover:text-[var(--color-rw-blue)] sm:inline"
                                 >

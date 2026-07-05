@@ -10,6 +10,11 @@ class DashboardController extends Controller
 {
     public function __invoke(): Response
     {
-        return Inertia::render('Dashboard');
+        $user = auth()->user();
+        $issueCount = $user?->issues()->count() ?? 0;
+
+        return Inertia::render('Dashboard', [
+            'issueCount' => $issueCount,
+        ]);
     }
 }
