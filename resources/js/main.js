@@ -96,7 +96,8 @@ function renderIssueCard(issue) {
     const badgeClass = statusClasses[status] || 'landing-status-default';
     const safeTitle = issue?.title || 'Untitled issue';
     const safeCopy = issue?.description || 'No additional details available yet.';
-    const upvotes = Number(issue?.upvotes_count || 0);
+    const likes = Number(issue?.likes_count ?? issue?.upvotes_count ?? 0);
+    const dislikes = Number(issue?.dislikes_count ?? 0);
 
     return `
         <article class="landing-issue-card">
@@ -106,7 +107,11 @@ function renderIssueCard(issue) {
                     <span class="landing-status-badge ${badgeClass}">${status.replace(/-/g, ' ')}</span>
                     <span class="landing-upvote-chip">
                         <span class="material-symbols-outlined text-base">thumb_up</span>
-                        ${upvotes}
+                        ${likes}
+                    </span>
+                    <span class="landing-upvote-chip">
+                        <span class="material-symbols-outlined text-base">thumb_down</span>
+                        ${dislikes}
                     </span>
                 </div>
                 <h3 class="landing-issue-title mb-3">${safeTitle}</h3>

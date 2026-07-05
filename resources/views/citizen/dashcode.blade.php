@@ -34,8 +34,8 @@
                 <p class="text-4xl font-extrabold" style="color: var(--cir-text)" data-stat="resolved">0</p>
             </div>
             <div class="cir-stat-card">
-                <p class="cir-label !mb-3">Upvotes Received</p>
-                <p class="text-4xl font-extrabold" style="color: var(--cir-text)" data-stat="upvotes_received">0</p>
+                <p class="cir-label !mb-3">Likes Received</p>
+                <p class="text-4xl font-extrabold" style="color: var(--cir-text)" data-stat="likes_received">0</p>
             </div>
         </section>
 
@@ -60,7 +60,7 @@
                     <span class="material-symbols-outlined text-4xl">groups</span>
                 </div>
                 <h4 class="cir-section-heading mb-2">Community Feed</h4>
-                <p class="max-w-xs text-sm" style="color: var(--cir-text-muted)">Browse other citizens' reports, upvote urgent issues, and join discussions.</p>
+                <p class="max-w-xs text-sm" style="color: var(--cir-text-muted)">Browse real citizen reports, like urgent issues, and join discussions.</p>
             </a>
         </section>
 

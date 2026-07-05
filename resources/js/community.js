@@ -81,10 +81,11 @@ function applyImageFallbacks(scope = document) {
 function renderFeedCard(issue) {
     const imageUrl = issue?.images?.[0]?.url || DEFAULT_FALLBACK_IMAGE;
     const detailUrl = `/community/${issue.id}`;
-    const upvotes = Number(issue?.upvotes_count || 0);
+    const likes = Number(issue?.likes_count ?? issue?.upvotes_count ?? 0);
+    const dislikes = Number(issue?.dislikes_count ?? 0);
     const comments = Number(issue?.comments_count || 0);
     const reporter = issue?.reporter?.name || 'Anonymous citizen';
-    const hasUpvoted = Boolean(issue?.has_upvoted);
+    const userReaction = issue?.user_reaction || null;
 
     return `
         <article class="cir-landing-card overflow-hidden">
@@ -113,9 +114,13 @@ function renderFeedCard(issue) {
                 </div>
                 <div class="flex items-center justify-between gap-4 border-t pt-4" style="border-color: var(--cir-border)">
                     <div class="flex items-center gap-4 text-sm font-semibold" style="color: var(--cir-text-muted)">
-                        <span class="inline-flex items-center gap-1 ${hasUpvoted ? 'text-emerald-500' : ''}">
+                        <span class="inline-flex items-center gap-1 ${userReaction === 'like' ? 'text-emerald-500' : ''}">
                             <span class="material-symbols-outlined text-base">thumb_up</span>
-                            ${upvotes}
+                            ${likes}
+                        </span>
+                        <span class="inline-flex items-center gap-1 ${userReaction === 'dislike' ? 'text-rose-500' : ''}">
+                            <span class="material-symbols-outlined text-base">thumb_down</span>
+                            ${dislikes}
                         </span>
                         <span class="inline-flex items-center gap-1">
                             <span class="material-symbols-outlined text-base">chat_bubble</span>
@@ -131,8 +136,9 @@ function renderFeedCard(issue) {
 
 function renderIssueDetail(issue) {
     const imageUrl = issue?.images?.[0]?.url || DEFAULT_FALLBACK_IMAGE;
-    const upvotes = Number(issue?.upvotes_count || 0);
-    const hasUpvoted = Boolean(issue?.has_upvoted);
+    const likes = Number(issue?.likes_count ?? issue?.upvotes_count ?? 0);
+    const dislikes = Number(issue?.dislikes_count ?? 0);
+    const userReaction = issue?.user_reaction || null;
     const reporter = issue?.reporter?.name || 'Anonymous citizen';
     const worker = issue?.worker?.name || issue?.assignment?.worker?.name;
 
@@ -177,19 +183,27 @@ function renderIssueDetail(issue) {
 
                 <div class="mt-8 flex flex-wrap items-center gap-4 border-t pt-6" style="border-color: var(--cir-border)">
                     <button
-                        class="cir-btn ${hasUpvoted ? 'cir-btn-primary' : 'cir-btn-secondary'}"
-                        data-upvote-button
-                        data-has-upvoted="${hasUpvoted ? '1' : '0'}"
+                        class="cir-btn ${userReaction === 'like' ? 'cir-btn-primary' : 'cir-btn-secondary'}"
+                        data-react-button="like"
                         type="button"
                     >
                         <span class="material-symbols-outlined">thumb_up</span>
-                        <span data-upvote-count>${upvotes}</span>
-                        <span data-upvote-label>${hasUpvoted ? 'Supported' : 'Support this issue'}</span>
+                        <span data-like-count>${likes}</span>
+                        <span>Like</span>
+                    </button>
+                    <button
+                        class="cir-btn ${userReaction === 'dislike' ? '!border-rose-400 !bg-rose-500/10 !text-rose-500' : 'cir-btn-secondary'}"
+                        data-react-button="dislike"
+                        type="button"
+                    >
+                        <span class="material-symbols-outlined">thumb_down</span>
+                        <span data-dislike-count>${dislikes}</span>
+                        <span>Dislike</span>
                     </button>
                     <p class="text-sm" style="color: var(--cir-text-muted)">
                         <span data-comments-count-inline>${Number(issue.comments_count || 0)}</span> community comments
                     </p>
-                    <p class="hidden text-sm" data-upvote-message role="status"></p>
+                    <p class="hidden text-sm" data-react-message role="status"></p>
                 </div>
             </div>
         </article>
@@ -397,7 +411,7 @@ async function initCommunityDetail() {
             issue = payload.data || payload;
             detailNode.innerHTML = renderIssueDetail(issue);
             applyImageFallbacks(detailNode);
-            bindUpvoteButton();
+            bindReactionButtons();
         } catch (error) {
             detailNode.innerHTML = `
                 <div class="cir-card p-8 text-center">
@@ -408,48 +422,68 @@ async function initCommunityDetail() {
         }
     };
 
-    const bindUpvoteButton = () => {
-        const upvoteButton = section.querySelector('[data-upvote-button]');
-        const upvoteCountNode = section.querySelector('[data-upvote-count]');
-        const upvoteMessage = section.querySelector('[data-upvote-message]');
+    const bindReactionButtons = () => {
+        const reactMessage = section.querySelector('[data-react-message]');
+        const likeButton = section.querySelector('[data-react-button="like"]');
+        const dislikeButton = section.querySelector('[data-react-button="dislike"]');
+        const likeCountNode = section.querySelector('[data-like-count]');
+        const dislikeCountNode = section.querySelector('[data-dislike-count]');
 
-        upvoteButton?.addEventListener('click', async () => {
+        const updateReactionUi = (payload) => {
+            const likes = Number(payload?.likes_count ?? 0);
+            const dislikes = Number(payload?.dislikes_count ?? 0);
+            const userReaction = payload?.user_reaction || null;
+
+            if (likeCountNode) {
+                likeCountNode.textContent = String(likes);
+            }
+
+            if (dislikeCountNode) {
+                dislikeCountNode.textContent = String(dislikes);
+            }
+
+            likeButton?.classList.toggle('cir-btn-primary', userReaction === 'like');
+            likeButton?.classList.toggle('cir-btn-secondary', userReaction !== 'like');
+            dislikeButton?.classList.toggle('!border-rose-400', userReaction === 'dislike');
+            dislikeButton?.classList.toggle('!bg-rose-500/10', userReaction === 'dislike');
+            dislikeButton?.classList.toggle('!text-rose-500', userReaction === 'dislike');
+            dislikeButton?.classList.toggle('cir-btn-secondary', userReaction !== 'dislike');
+
+            if (issue) {
+                issue.likes_count = likes;
+                issue.dislikes_count = dislikes;
+                issue.user_reaction = userReaction;
+            }
+        };
+
+        const submitReaction = async (reaction) => {
             if (!isCitizen) {
                 window.location.href = loginUrl;
                 return;
             }
 
-            if (upvoteButton.dataset.hasUpvoted === '1') {
-                if (upvoteMessage) {
-                    upvoteMessage.textContent = 'You already supported this issue.';
-                    upvoteMessage.classList.remove('hidden');
-                }
-                return;
-            }
-
             try {
-                const payload = await apiRequest(section.dataset.upvoteUrl, { method: 'POST' });
-                const count = Number(payload?.data?.upvotes_count ?? issue?.upvotes_count ?? 0);
+                const payload = await apiRequest(section.dataset.reactUrl, {
+                    method: 'POST',
+                    body: JSON.stringify({ reaction }),
+                });
 
-                if (upvoteCountNode) {
-                    upvoteCountNode.textContent = String(count);
-                }
+                updateReactionUi(payload.data || {});
 
-                upvoteButton.dataset.hasUpvoted = '1';
-                upvoteButton.className = 'cir-btn cir-btn-primary';
-                section.querySelector('[data-upvote-label]')?.replaceChildren(document.createTextNode('Supported'));
-
-                if (upvoteMessage) {
-                    upvoteMessage.textContent = payload.message || 'Thanks for supporting this issue.';
-                    upvoteMessage.classList.remove('hidden');
+                if (reactMessage) {
+                    reactMessage.textContent = payload.message || 'Reaction saved.';
+                    reactMessage.classList.remove('hidden');
                 }
             } catch (error) {
-                if (upvoteMessage) {
-                    upvoteMessage.textContent = error.message;
-                    upvoteMessage.classList.remove('hidden');
+                if (reactMessage) {
+                    reactMessage.textContent = error.message;
+                    reactMessage.classList.remove('hidden');
                 }
             }
-        });
+        };
+
+        likeButton?.addEventListener('click', () => submitReaction('like'));
+        dislikeButton?.addEventListener('click', () => submitReaction('dislike'));
     };
 
     commentForm?.addEventListener('submit', async (event) => {

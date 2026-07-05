@@ -250,7 +250,8 @@ const initDashboardPage = async (user) => {
         total_reported: stats.total_reported ?? 0,
         in_progress: stats.in_progress ?? 0,
         resolved: stats.resolved ?? 0,
-        upvotes_received: stats.upvotes_received ?? 0,
+        upvotes_received: stats.likes_received ?? stats.upvotes_received ?? 0,
+        likes_received: stats.likes_received ?? stats.upvotes_received ?? 0,
         preferred_location: data.profile?.preferred_location || 'No preferred location set yet',
     };
 
@@ -280,7 +281,7 @@ const initDashboardPage = async (user) => {
                         <div class="flex items-center gap-4 text-xs font-semibold" style="color: var(--cir-text-faint)">
                             <span>#CF-${issue.id}</span>
                             <span>${escapeHtml(formatDateTime(issue.reported_at))}</span>
-                            <span>${issue.upvotes_count} upvotes</span>
+                            <span>${issue.likes_count ?? issue.upvotes_count ?? 0} likes</span>
                         </div>
                     </div>
                 </article>`,

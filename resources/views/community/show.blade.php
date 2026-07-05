@@ -13,7 +13,7 @@
         data-issue-id="{{ $issueId }}"
         data-issue-url="{{ url('/api/issues/'.$issueId) }}"
         data-comments-url="{{ url('/api/issues/'.$issueId.'/comments') }}"
-        data-upvote-url="{{ url('/api/issues/'.$issueId.'/upvote') }}"
+        data-react-url="{{ url('/api/issues/'.$issueId.'/react') }}"
         data-comments-post-url="{{ url('/api/comments') }}"
         data-login-url="{{ route('login') }}"
     >

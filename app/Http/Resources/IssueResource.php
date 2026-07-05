@@ -27,8 +27,12 @@ class IssueResource extends JsonResource
                 'address' => $this->address,
             ],
             'reported_at' => optional($this->reported_at)->toISOString(),
-            'upvotes_count' => $this->upvotes_count,
-            'has_upvoted' => (bool) ($this->has_upvoted ?? false),
+            'likes_count' => $this->likes_count,
+            'dislikes_count' => $this->dislikes_count,
+            'user_reaction' => $this->when(
+                $this->relationLoaded('reactions'),
+                fn () => $this->reactions->first()?->reaction
+            ),
             'comments_count' => $this->whenCounted('comments'),
             'comments' => CommentResource::collection($this->whenLoaded('comments')),
             'reporter' => [

@@ -107,9 +107,9 @@ class User extends Authenticatable
         return $this->hasMany(Comment::class);
     }
 
-    public function upvotes(): HasMany
+    public function issueReactions(): HasMany
     {
-        return $this->hasMany(Upvote::class);
+        return $this->hasMany(IssueReaction::class);
     }
 
     public function assignedIssues(): HasMany

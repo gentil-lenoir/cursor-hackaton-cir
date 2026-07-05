@@ -27,8 +27,10 @@ class IssueController extends Controller
                 ->with(['user', 'images', 'assignment.worker', 'assignment.assignedBy', 'escalatedTo', 'worker.department'])
                 ->withCount('comments')
                 ->when($request->user(), function ($query) use ($request) {
-                    $query->withExists([
-                        'upvotes as has_upvoted' => fn ($upvoteQuery) => $upvoteQuery->where('user_id', $request->user()->id),
+                    $query->with([
+                        'reactions' => fn ($reactionQuery) => $reactionQuery
+                            ->where('user_id', $request->user()->id)
+                            ->select('id', 'issue_id', 'user_id', 'reaction'),
                     ]);
                 })
                 ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')))
@@ -152,8 +154,10 @@ class IssueController extends Controller
             ])
                 ->withCount('comments')
                 ->when($request->user(), function ($query) use ($request) {
-                    $query->withExists([
-                        'upvotes as has_upvoted' => fn ($upvoteQuery) => $upvoteQuery->where('user_id', $request->user()->id),
+                    $query->with([
+                        'reactions' => fn ($reactionQuery) => $reactionQuery
+                            ->where('user_id', $request->user()->id)
+                            ->select('id', 'issue_id', 'user_id', 'reaction'),
                     ]);
                 })
                 ->findOrFail($id);

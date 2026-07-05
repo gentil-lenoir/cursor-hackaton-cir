@@ -6,7 +6,7 @@ use App\Http\Controllers\Api\CitizenPortalController;
 use App\Http\Controllers\Api\CommentController;
 use App\Http\Controllers\Api\IssueController;
 use App\Http\Controllers\Api\SystemManagerController;
-use App\Http\Controllers\Api\UpvoteController;
+use App\Http\Controllers\Api\IssueReactionController;
 use App\Http\Controllers\Api\WorkerController;
 use Illuminate\Support\Facades\Route;
 
@@ -71,5 +71,5 @@ Route::middleware('auth:sanctum')->group(function (): void {
         ->middleware('role:system_manager');
 
     Route::post('/comments', [CommentController::class, 'store']);
-    Route::post('/issues/{id}/upvote', [UpvoteController::class, 'store']);
+    Route::post('/issues/{id}/react', [IssueReactionController::class, 'store']);
 });

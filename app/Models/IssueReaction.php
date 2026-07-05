@@ -2,14 +2,19 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class Upvote extends Model
+class IssueReaction extends Model
 {
+    public const REACTION_LIKE = 'like';
+
+    public const REACTION_DISLIKE = 'dislike';
+
     protected $fillable = [
         'issue_id',
         'user_id',
+        'reaction',
     ];
 
     public function issue(): BelongsTo

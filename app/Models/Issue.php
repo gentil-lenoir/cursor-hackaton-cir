@@ -25,7 +25,8 @@ class Issue extends Model
         'latitude',
         'longitude',
         'address',
-        'upvotes_count',
+        'likes_count',
+        'dislikes_count',
         'reported_at',
     ];
 
@@ -61,9 +62,14 @@ class Issue extends Model
         return $this->hasMany(Comment::class);
     }
 
+    public function reactions(): HasMany
+    {
+        return $this->hasMany(IssueReaction::class);
+    }
+
     public function upvotes(): HasMany
     {
-        return $this->hasMany(Upvote::class);
+        return $this->reactions()->where('reaction', IssueReaction::REACTION_LIKE);
     }
 
     public function statusHistory(): HasMany

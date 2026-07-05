@@ -2,11 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\Comment;
 use App\Models\Department;
 use App\Models\Issue;
-use App\Models\Notification;
-use App\Models\Upvote;
 use App\Models\User;
 use App\Models\Worker;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -18,15 +15,18 @@ class DatabaseSeeder extends Seeder
 {
     use WithoutModelEvents;
 
+    private const DEMO_ISSUE_TITLES = [
+        'Streetlight not working near park',
+        'Overflowing roadside garbage bin',
+        'Water leakage beside ward office',
+        'Large pothole causing traffic jam',
+    ];
+
     public function run(): void
     {
         DB::transaction(function (): void {
-            Notification::query()->delete();
-            Comment::query()->delete();
-            Upvote::query()->delete();
-
             Issue::query()
-                ->where('title', 'Large pothole causing traffic jam')
+                ->whereIn('title', self::DEMO_ISSUE_TITLES)
                 ->delete();
 
             Issue::query()->update([
@@ -47,7 +47,7 @@ class DatabaseSeeder extends Seeder
                 ->where('email', '!=', 'admin2004@gmail.com')
                 ->delete();
 
-            $municipalManager = User::query()->updateOrCreate(
+            User::query()->updateOrCreate(
                 ['email' => 'admin2004@gmail.com'],
                 [
                     'name' => 'Aarav Municipal Manager',
@@ -59,14 +59,14 @@ class DatabaseSeeder extends Seeder
                 ]
             );
 
-            $citizen = User::query()->updateOrCreate(
+            User::query()->updateOrCreate(
                 ['email' => 'citizen.demo@civic.local'],
                 [
-                    'name' => 'Rahul Citizen',
+                    'name' => 'Demo Citizen',
                     'password' => Hash::make('citizen123'),
                     'role' => User::ROLE_CITIZEN,
                     'phone' => '9000000003',
-                    'preferred_location' => 'Green Park Road, Pune',
+                    'preferred_location' => 'Kigali, Rwanda',
                     'theme_preference' => 'light',
                     'notify_email' => true,
                     'notify_sms' => false,
@@ -76,21 +76,21 @@ class DatabaseSeeder extends Seeder
                 ]
             );
 
-            $sanitation = $this->upsertDepartment('Sanitation', 'Waste collection and public area cleanliness.');
-            $electricity = $this->upsertDepartment('Electricity', 'Streetlight and electrical maintenance.');
-            $waterSupply = $this->upsertDepartment('Water Supply', 'Pipe leakage and water pressure support.');
+            $this->upsertDepartment('Sanitation', 'Waste collection and public area cleanliness.');
+            $this->upsertDepartment('Electricity', 'Streetlight and electrical maintenance.');
+            $this->upsertDepartment('Water Supply', 'Pipe leakage and water pressure support.');
 
-            $workerOne = Worker::query()->updateOrCreate(
+            Worker::query()->updateOrCreate(
                 ['email' => 'worker.sanitation@civic.local'],
                 [
                     'name' => 'Priya Sanitation',
                     'phone' => '9000000101',
-                    'department_id' => $sanitation->id,
+                    'department_id' => Department::query()->where('name', 'Sanitation')->value('id'),
                     'password' => Hash::make('worker123'),
                     'status' => Worker::STATUS_ACTIVE,
                     'availability_status' => 'available',
                     'theme_preference' => 'light',
-                    'preferred_zone' => 'Market Corner Ward',
+                    'preferred_zone' => 'Kigali Central',
                     'shift_window' => '08:00 AM - 05:00 PM',
                     'notify_new_assignments' => true,
                     'notify_escalation_alerts' => true,
@@ -98,17 +98,17 @@ class DatabaseSeeder extends Seeder
                 ]
             );
 
-            $workerTwo = Worker::query()->updateOrCreate(
+            Worker::query()->updateOrCreate(
                 ['email' => 'worker.electricity@civic.local'],
                 [
                     'name' => 'Arjun Electricity',
                     'phone' => '9000000102',
-                    'department_id' => $electricity->id,
+                    'department_id' => Department::query()->where('name', 'Electricity')->value('id'),
                     'password' => Hash::make('worker123'),
                     'status' => Worker::STATUS_ACTIVE,
                     'availability_status' => 'busy',
                     'theme_preference' => 'dark',
-                    'preferred_zone' => 'Green Park Sector',
+                    'preferred_zone' => 'Kigali North',
                     'shift_window' => '09:00 AM - 06:00 PM',
                     'notify_new_assignments' => true,
                     'notify_escalation_alerts' => true,
@@ -116,101 +116,21 @@ class DatabaseSeeder extends Seeder
                 ]
             );
 
-            $workerThree = Worker::query()->updateOrCreate(
+            Worker::query()->updateOrCreate(
                 ['email' => 'worker.water@civic.local'],
                 [
                     'name' => 'Meera Water',
                     'phone' => '9000000103',
-                    'department_id' => $waterSupply->id,
+                    'department_id' => Department::query()->where('name', 'Water Supply')->value('id'),
                     'password' => Hash::make('worker123'),
                     'status' => Worker::STATUS_INACTIVE,
                     'availability_status' => 'offline',
                     'theme_preference' => 'light',
-                    'preferred_zone' => 'Ward Office Lane',
+                    'preferred_zone' => 'Kigali South',
                     'shift_window' => '10:00 AM - 06:00 PM',
                     'notify_new_assignments' => false,
                     'notify_escalation_alerts' => false,
                     'notify_daily_summary' => false,
-                ]
-            );
-
-            $reportedIssue = Issue::query()->updateOrCreate(
-                ['user_id' => $citizen->id, 'title' => 'Streetlight not working near park'],
-                [
-                    'description' => 'The streetlight near Green Park has been off for two nights.',
-                    'category' => 'electricity',
-                    'status' => 'reported',
-                    'priority' => 'medium',
-                    'latitude' => 18.5204300,
-                    'longitude' => 73.8567440,
-                    'address' => 'Green Park Road, Pune',
-                    'reported_at' => now()->subDays(2),
-                ]
-            );
-
-            $inProgressIssue = Issue::query()->updateOrCreate(
-                ['user_id' => $citizen->id, 'title' => 'Overflowing roadside garbage bin'],
-                [
-                    'description' => 'The garbage bin at the market corner is overflowing onto the road.',
-                    'category' => 'sanitation',
-                    'status' => 'in_progress',
-                    'priority' => 'high',
-                    'worker_id' => $workerOne->id,
-                    'deadline' => now()->addDay()->toDateString(),
-                    'latitude' => 18.5215000,
-                    'longitude' => 73.8571000,
-                    'address' => 'Market Corner, Pune',
-                    'reported_at' => now()->subDay(),
-                ]
-            );
-
-            $resolvedIssue = Issue::query()->updateOrCreate(
-                ['user_id' => $citizen->id, 'title' => 'Water leakage beside ward office'],
-                [
-                    'description' => 'Continuous water leakage is making the road slippery.',
-                    'category' => 'water',
-                    'status' => 'resolved',
-                    'priority' => 'urgent',
-                    'worker_id' => $workerTwo->id,
-                    'deadline' => now()->subDay()->toDateString(),
-                    'latitude' => 18.5199000,
-                    'longitude' => 73.8558000,
-                    'address' => 'Ward Office Lane, Pune',
-                    'citizen_feedback' => 'Leakage was fixed quickly. Thank you.',
-                    'feedback_submitted_at' => now()->subHours(6),
-                    'reported_at' => now()->subDays(4),
-                ]
-            );
-
-            Comment::query()->firstOrCreate(
-                ['issue_id' => $inProgressIssue->id, 'user_id' => $citizen->id, 'comment' => 'Please resolve this before the evening crowd arrives.']
-            );
-
-            Comment::query()->firstOrCreate(
-                ['issue_id' => $resolvedIssue->id, 'user_id' => $citizen->id, 'comment' => 'The repair looks good now.']
-            );
-
-            Upvote::query()->firstOrCreate(
-                ['issue_id' => $reportedIssue->id, 'user_id' => $municipalManager->id]
-            );
-
-            $reportedIssue->update(['upvotes_count' => 1]);
-
-            Notification::query()->firstOrCreate(
-                ['user_id' => $citizen->id, 'issue_id' => $resolvedIssue->id, 'type' => 'issue_status_updated'],
-                [
-                    'title' => 'Complaint Resolved',
-                    'message' => "Your complaint #{$resolvedIssue->id} has been marked resolved.",
-                    'data' => ['to_status' => 'resolved'],
-                ]
-            );
-
-            Notification::query()->firstOrCreate(
-                ['user_id' => $citizen->id, 'issue_id' => $inProgressIssue->id, 'type' => 'issue_status_updated'],
-                [
-                    'title' => 'Complaint In Progress',
-                    'message' => "Your complaint #{$inProgressIssue->id} is now in progress.",
-                    'data' => ['to_status' => 'in_progress'],
                 ]
             );
         });

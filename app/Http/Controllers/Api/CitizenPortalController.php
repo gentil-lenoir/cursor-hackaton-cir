@@ -30,7 +30,7 @@ class CitizenPortalController extends Controller
                     'total_reported' => $issues->count(),
                     'in_progress' => $issues->where('status', 'in_progress')->count(),
                     'resolved' => $issues->where('status', 'resolved')->count(),
-                    'upvotes_received' => (int) $issues->sum('upvotes_count'),
+                    'likes_received' => (int) $issues->sum('likes_count'),
                 ],
                 'recent_issues' => $issues->take(5)->map(fn (Issue $issue): array => $this->formatIssueSummary($issue))->values(),
             ],
@@ -150,7 +150,8 @@ class CitizenPortalController extends Controller
             'address' => $issue->address,
             'reported_at' => optional($issue->reported_at)->toISOString(),
             'deadline' => optional($issue->deadline)->toDateString(),
-            'upvotes_count' => $issue->upvotes_count,
+            'likes_count' => $issue->likes_count,
+            'dislikes_count' => $issue->dislikes_count,
         ];
     }
 }

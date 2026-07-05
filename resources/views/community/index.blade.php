@@ -14,7 +14,7 @@
                     <p class="cir-label mb-3 !text-emerald-500">Community Feed</p>
                     <h1 class="cir-title mb-3 !text-3xl lg:!text-4xl">See what others are reporting</h1>
                     <p class="cir-subtitle max-w-2xl">
-                        Browse civic issues reported across Rwanda, support urgent reports with upvotes, and join the conversation with comments.
+                        Browse real civic issues reported across Rwanda, react with likes or dislikes, and join the conversation with comments.
                     </p>
                 </div>
                 <a href="{{ route('citizen.report') }}" class="cir-btn cir-btn-primary shrink-0">
