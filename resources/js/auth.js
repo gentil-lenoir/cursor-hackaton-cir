@@ -18,6 +18,7 @@ function getConfig() {
     return {
         page: body.dataset.authPage || '',
         apiLoginUrl: body.dataset.apiLoginUrl || '/api/login',
+        apiWorkerLoginUrl: body.dataset.apiWorkerLoginUrl || '/api/worker/login',
         apiRegisterUrl: body.dataset.apiRegisterUrl || '/api/register',
         apiLogoutUrl: body.dataset.apiLogoutUrl || '/api/logout',
         apiMeUrl: body.dataset.apiMeUrl || '/api/me',
@@ -266,6 +267,26 @@ function validateRegisterForm(form) {
     return { isValid, data };
 }
 
+function validateWorkerLoginForm(form) {
+    const data = sanitizeFormData(Object.fromEntries(new FormData(form).entries()));
+    let isValid = true;
+
+    if (!data.name) {
+        setFieldError(form, 'name', 'Name is required.');
+        isValid = false;
+    }
+
+    if (!data.email) {
+        setFieldError(form, 'email', 'Email is required.');
+        isValid = false;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+        setFieldError(form, 'email', 'Enter a valid email address.');
+        isValid = false;
+    }
+
+    return { isValid, data };
+}
+
 async function syncAuthenticatedUser(config = getConfig()) {
     migrateLegacyAuthStorage();
 
@@ -348,6 +369,51 @@ async function submitLogin(form) {
     }
 }
 
+async function submitWorkerLogin(form) {
+    const config = getConfig();
+    const { isValid, data } = validateWorkerLoginForm(form);
+
+    if (!isValid) {
+        setAlert('Please enter your name and work email.', 'error');
+        return;
+    }
+
+    setSubmitting(form, true);
+
+    try {
+        const payload = await apiRequest(config.apiWorkerLoginUrl, {
+            method: 'POST',
+            body: JSON.stringify({
+                name: data.name,
+                email: data.email,
+            }),
+        });
+        const auth = normalizeAuthResponse(payload);
+
+        if (!auth.token || !auth.user) {
+            throw new Error('Login succeeded but the server did not return usable authentication data.');
+        }
+
+        setToken(auth.token);
+        setUser(auth.user);
+        setAlert(auth.message || 'Worker login successful. Redirecting...', 'success');
+
+        window.setTimeout(() => {
+            redirectToRoleDashboard(auth.user.role, config);
+        }, 500);
+    } catch (error) {
+        const handledFieldErrors = applyServerErrors(form, error.payload);
+        const message =
+            error.status === 422 && !handledFieldErrors
+                ? error.payload?.message || 'No worker account matches that name and email.'
+                : error.message;
+
+        setAlert(message, 'error');
+    } finally {
+        setSubmitting(form, false);
+    }
+}
+
 async function submitRegister(form) {
     const config = getConfig();
     const { isValid, data } = validateRegisterForm(form);
@@ -390,6 +456,7 @@ async function submitRegister(form) {
 
 function bindAuthForms() {
     const loginForm = document.querySelector('[data-auth-form="login"]');
+    const workerLoginForm = document.querySelector('[data-auth-form="worker-login"]');
     const registerForm = document.querySelector('[data-auth-form="register"]');
 
     if (loginForm) {
@@ -398,6 +465,15 @@ function bindAuthForms() {
             clearFieldErrors(loginForm);
             setAlert('');
             await submitLogin(loginForm);
+        });
+    }
+
+    if (workerLoginForm) {
+        workerLoginForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            clearFieldErrors(workerLoginForm);
+            setAlert('');
+            await submitWorkerLogin(workerLoginForm);
         });
     }
 
@@ -487,7 +563,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const config = getConfig();
 
-    if (config.page === 'login' || config.page === 'register') {
+    if (config.page === 'login' || config.page === 'register' || config.page === 'worker-login') {
         const user = await syncAuthenticatedUser(config);
 
         if (user?.role) {

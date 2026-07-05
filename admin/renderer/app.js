@@ -62,6 +62,8 @@ async function loadDashboard() {
             cards[2].querySelector('.stat-value').textContent = stats.reported_issues + stats.in_progress_issues;
             cards[2].querySelector('.stat-meta').textContent = `${stats.resolved_issues} resolved`;
             cards[3].querySelector('.stat-value').textContent = stats.overdue_issues;
+        } else {
+            console.error('Dashboard stats error:', statsResult.error);
         }
 
         const issuesResult = await window.electronAPI.getRecentIssues();
@@ -91,6 +93,9 @@ async function loadDashboard() {
                 html += '</tbody></table>';
                 container.innerHTML = html;
             }
+        } else {
+            const container = document.getElementById('recentIssuesContainer');
+            container.innerHTML = `<div class="empty-state"><p style="color:#b91c1c;">${issuesResult.error || 'Could not load issues'}</p></div>`;
         }
 
         const workersResult = await window.electronAPI.getTopWorkers();
@@ -199,32 +204,45 @@ async function deleteWorker(id) {
 // ISSUES
 async function loadIssues() {
     try {
-        const result = await window.electronAPI.listIssues({ page: 1, limit: 50 });
-        if (result.success) {
-            const tbody = document.getElementById('issuesBody');
-            tbody.innerHTML = '';
+        const search = document.getElementById('issueSearch')?.value.trim() || '';
+        const status = document.getElementById('issueStatusFilter')?.value || '';
+        const result = await window.electronAPI.listIssues({ search, status, page: 1, limit: 50 });
+        const tbody = document.getElementById('issuesBody');
+        tbody.innerHTML = '';
 
-            if (result.data.issues.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px;">No issues found</td></tr>';
-            } else {
-                result.data.issues.forEach(issue => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${issue.title}</td>
-                        <td style="font-size: 12px; color: #64748b;">${issue.category || '-'}</td>
-                        <td>${issue.worker_name || 'Unassigned'}</td>
-                        <td><span class="badge badge-${issue.status}">${formatStatus(issue.status)}</span></td>
-                        <td style="font-size: 12px; color: #64748b;">${formatDate(issue.created_at)}</td>
-                        <td>
-                            <button class="btn btn-secondary" style="font-size: 11px; padding: 6px 12px;" onclick="viewIssue(${issue.id})">View</button>
-                        </td>
-                    `;
-                    tbody.appendChild(row);
-                });
-            }
+        if (!result.success) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 40px; color: #b91c1c;">${result.error || 'Failed to load issues from API'}</td></tr>`;
+            return;
         }
+
+        if (result.data.issues.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px;">No issues found</td></tr>';
+            return;
+        }
+
+        result.data.issues.forEach(issue => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>
+                    <p style="font-weight: 600; margin: 0;">${escapeHtml(issue.title)}</p>
+                    <p style="font-size: 11px; color: #64748b; margin: 4px 0 0 0;">${escapeHtml(issue.reporter_name || 'Unknown reporter')}${issue.address ? ` · ${escapeHtml(issue.address)}` : ''}</p>
+                </td>
+                <td style="font-size: 12px; color: #64748b;">${escapeHtml(issue.category || '-')}</td>
+                <td>${escapeHtml(issue.worker_name || 'Unassigned')}</td>
+                <td><span class="badge badge-${issue.status}">${formatStatus(issue.status)}</span></td>
+                <td style="font-size: 12px; color: #64748b;">${formatDate(issue.created_at)}</td>
+                <td>
+                    <button class="btn btn-secondary" style="font-size: 11px; padding: 6px 12px;" onclick="viewIssue(${issue.id})">View</button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
     } catch (err) {
         console.error('Issues load error:', err);
+        const tbody = document.getElementById('issuesBody');
+        if (tbody) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 40px; color: #b91c1c;">${err.message}</td></tr>`;
+        }
     }
 }
 
@@ -356,9 +374,24 @@ function formatDate(dateString) {
     return new Date(dateString).toLocaleDateString();
 }
 
+function escapeHtml(value = '') {
+    return String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+}
+
 function viewIssue(id) {
     alert('Issue view not yet implemented');
 }
 
 // Initial load
+document.getElementById('issueSearch')?.addEventListener('input', () => {
+    clearTimeout(window._issueSearchTimer);
+    window._issueSearchTimer = setTimeout(loadIssues, 250);
+});
+document.getElementById('issueStatusFilter')?.addEventListener('change', loadIssues);
+
 loadDashboard();

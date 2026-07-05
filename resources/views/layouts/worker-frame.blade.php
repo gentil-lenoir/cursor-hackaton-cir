@@ -33,7 +33,7 @@
         data-api-worker-settings-url="{{ url('/api/worker/settings') }}"
         data-api-worker-performance-url="{{ url('/api/worker/performance') }}"
         data-dashboard-url="{{ route('worker.dashboard') }}"
-        data-login-url="{{ route('login') }}"
+        data-login-url="{{ route('login.worker') }}"
     >
         <main class="p-6 md:p-8 lg:p-10 space-y-8">
             @yield('content')

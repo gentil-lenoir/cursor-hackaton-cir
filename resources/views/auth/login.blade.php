@@ -50,6 +50,11 @@
         </form>
 
         <div class="mt-8 border-t pt-6 text-center text-sm" style="border-color: var(--cir-border); color: var(--cir-text-muted)">
+            Municipal field worker?
+            <a class="font-semibold text-sky-500 hover:text-sky-400" href="{{ route('login.worker') }}">Login as Worker</a>
+        </div>
+
+        <div class="mt-4 text-center text-sm" style="color: var(--cir-text-muted)">
             Need a new account?
             <a class="font-semibold text-emerald-500 hover:text-emerald-400" href="{{ route('register') }}">Create one here</a>
         </div>

@@ -96,6 +96,48 @@ class AuthController extends Controller
         ]);
     }
 
+    public function workerLogin(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255'],
+        ]);
+
+        $worker = Worker::query()
+            ->with('department')
+            ->where('email', $validated['email'])
+            ->whereRaw('LOWER(name) = ?', [mb_strtolower(trim($validated['name']))])
+            ->first();
+
+        if (! $worker) {
+            return response()->json([
+                'message' => 'No worker account matches that name and email.',
+                'errors' => [
+                    'email' => ['Check your name and email, then try again.'],
+                ],
+            ], 422);
+        }
+
+        if ($worker->status !== Worker::STATUS_ACTIVE) {
+            return response()->json([
+                'message' => 'This worker account is inactive. Please contact the municipal manager.',
+            ], 403);
+        }
+
+        $token = $worker->createToken('worker-api-token')->plainTextToken;
+
+        return response()->json([
+            'message' => 'Worker login successful.',
+            'access_token' => $token,
+            'token_type' => 'Bearer',
+            'user' => $this->formatAuthenticatedPrincipal($worker),
+            'data' => [
+                'user' => $this->formatAuthenticatedPrincipal($worker),
+                'token' => $token,
+            ],
+        ]);
+    }
+
     public function logout(Request $request): JsonResponse
     {
         $request->user()?->currentAccessToken()?->delete();

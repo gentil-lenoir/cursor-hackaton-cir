@@ -2,7 +2,7 @@ const workerConfig = () => {
     const body = document.body;
     return {
         page: body?.dataset.workerPage || '',
-        loginUrl: body?.dataset.loginUrl || '/login',
+        loginUrl: body?.dataset.loginUrl || '/login/worker',
         dashboardUrl: body?.dataset.dashboardUrl || '/worker',
         apiMeUrl: body?.dataset.apiMeUrl || '/api/me',
         apiLogoutUrl: body?.dataset.apiLogoutUrl || '/api/logout',

@@ -66,7 +66,7 @@
                     <p class="mt-1 text-sm text-slate-400" data-worker-shell-email>worker@example.com</p>
                     <p class="mt-3 text-xs font-bold uppercase tracking-[0.18em] text-primary" data-worker-shell-department>Department</p>
                 </div>
-                <a class="citizen-sidebar-link text-red-400 hover:text-red-300 hover:bg-red-500/10" href="{{ route('login') }}" data-auth-logout data-redirect-url="{{ route('login') }}">
+                <a class="citizen-sidebar-link text-red-400 hover:text-red-300 hover:bg-red-500/10" href="{{ route('login.worker') }}" data-auth-logout data-redirect-url="{{ route('login.worker') }}">
                     <span class="material-symbols-outlined">logout</span>
                     <span class="font-medium">Logout</span>
                 </a>

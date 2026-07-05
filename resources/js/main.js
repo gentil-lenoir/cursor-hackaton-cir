@@ -53,13 +53,21 @@ async function fetchJson(url, { authRequired = false } = {}) {
     return payload;
 }
 
-function setAuthButtonVisibility(isCitizenAuthenticated) {
+function setAuthButtonVisibility(user) {
+    const isCitizen = user?.role === 'citizen';
+    const isWorker = user?.role === 'worker';
+    const isGuest = !user;
+
     document.querySelectorAll('.auth-guest-link').forEach((link) => {
-        link.classList.toggle('hidden', isCitizenAuthenticated);
+        link.classList.toggle('hidden', !isGuest);
     });
 
     document.querySelectorAll('.auth-citizen-link').forEach((link) => {
-        link.classList.toggle('hidden', !isCitizenAuthenticated);
+        link.classList.toggle('hidden', !isCitizen);
+    });
+
+    document.querySelectorAll('.auth-worker-link').forEach((link) => {
+        link.classList.toggle('hidden', !isWorker);
     });
 }
 
@@ -70,7 +78,7 @@ async function handleAuthUI() {
     const token = getToken();
 
     if (!token) {
-        setAuthButtonVisibility(false);
+        setAuthButtonVisibility(null);
         return null;
     }
 
@@ -78,10 +86,9 @@ async function handleAuthUI() {
         apiMeUrl: config.apiMeUrl,
     });
 
-    const isCitizenAuthenticated = user?.role === 'citizen';
-    setAuthButtonVisibility(isCitizenAuthenticated);
+    setAuthButtonVisibility(user);
 
-    return isCitizenAuthenticated ? user : null;
+    return user;
 }
 
 function renderIssueCard(issue) {

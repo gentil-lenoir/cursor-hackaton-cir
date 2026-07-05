@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/worker/login', [AuthController::class, 'workerLogin']);
 Route::middleware('auth.sanctum.optional')->group(function (): void {
     Route::get('/issues', [IssueController::class, 'index']);
     Route::get('/issues/{id}', [IssueController::class, 'show']);

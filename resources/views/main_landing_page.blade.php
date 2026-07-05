@@ -23,9 +23,11 @@
                     data-register-url="{{ route('register') }}"
                 >
                     <a class="cir-btn cir-btn-ghost !px-8 !py-4 !text-base auth-guest-link" href="{{ route('login') }}">Login</a>
+                    <a class="cir-btn cir-btn-secondary !px-8 !py-4 !text-base auth-guest-link !border-sky-400/40 !text-sky-600 hover:!bg-sky-500/10" href="{{ route('login.worker') }}">Login as Worker</a>
                     <a class="cir-btn cir-btn-primary !px-8 !py-4 !text-base auth-guest-link" href="{{ route('register') }}">Sign Up</a>
                     <a class="cir-btn cir-btn-primary !px-8 !py-4 !text-base auth-citizen-link hidden" href="{{ route('citizen.dashboard') }}">Dashboard</a>
                     <a class="cir-btn cir-btn-secondary !px-8 !py-4 !text-base auth-citizen-link hidden" href="{{ route('citizen.report') }}">Report Issue</a>
+                    <a class="cir-btn cir-btn-secondary !px-8 !py-4 !text-base auth-worker-link hidden" href="{{ route('worker.dashboard') }}">Worker Dashboard</a>
                     <button class="cir-btn cir-btn-ghost !px-8 !py-4 !text-base !border-rose-400/30 !text-rose-500 hover:!bg-rose-500/10 auth-citizen-link hidden" data-auth-logout type="button">Logout</button>
                 </div>
             </div>

@@ -1,41 +1,72 @@
 const { ipcMain } = require('electron');
 const { getDatabase } = require('./db');
+const apiClient = require('./api-client');
+const { loadConfig } = require('./config');
 
 function setupIPC() {
   // Dashboard stats
-  ipcMain.handle('dashboard:getStats', () => {
+  ipcMain.handle('dashboard:getStats', async () => {
     const db = getDatabase();
     try {
-      const stats = {
+      const local = {
         workers: db.prepare('SELECT COUNT(*) as count FROM workers').get().count,
         active_workers: db.prepare("SELECT COUNT(*) as count FROM workers WHERE status = 'active'").get().count,
         departments: db.prepare('SELECT COUNT(*) as count FROM departments').get().count,
-        reported_issues: db.prepare("SELECT COUNT(*) as count FROM issues WHERE status = 'reported'").get().count,
-        in_progress_issues: db.prepare("SELECT COUNT(*) as count FROM issues WHERE status = 'in_progress'").get().count,
-        resolved_issues: db.prepare("SELECT COUNT(*) as count FROM issues WHERE status = 'resolved'").get().count,
-        overdue_issues: db.prepare("SELECT COUNT(*) as count FROM issues WHERE status IN ('reported', 'in_progress') AND julianday(updated_at) < julianday('now', '-7 days')").get().count,
       };
-      return { success: true, data: stats };
+
+      let issueStats = {
+        reported_issues: 0,
+        in_progress_issues: 0,
+        resolved_issues: 0,
+        overdue_issues: 0,
+      };
+
+      try {
+        const { issues } = await apiClient.listIssues({ limit: 100, page: 1 });
+        issueStats = {
+          reported_issues: issues.filter((issue) => issue.status === 'reported').length,
+          in_progress_issues: issues.filter((issue) => ['in_progress', 'assigned', 'escalated'].includes(issue.status)).length,
+          resolved_issues: issues.filter((issue) => issue.status === 'resolved').length,
+          overdue_issues: issues.filter((issue) => {
+            if (!issue.updated_at) {
+              return false;
+            }
+
+            const updatedAt = new Date(issue.updated_at).getTime();
+            const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+
+            return ['reported', 'in_progress', 'assigned'].includes(issue.status) && updatedAt < weekAgo;
+          }).length,
+        };
+      } catch (apiError) {
+        return {
+          success: false,
+          error: `Could not load issues from API (${loadConfig().apiBaseUrl}): ${apiError.message}`,
+        };
+      }
+
+      return {
+        success: true,
+        data: {
+          ...local,
+          ...issueStats,
+        },
+      };
     } catch (err) {
       return { success: false, error: err.message };
     }
   });
 
   // Recent issues
-  ipcMain.handle('issues:getRecent', () => {
-    const db = getDatabase();
+  ipcMain.handle('issues:getRecent', async () => {
     try {
-      const issues = db.prepare(`
-        SELECT i.*, w.name as worker_name, d.name as department_name
-        FROM issues i
-        LEFT JOIN workers w ON i.worker_id = w.id
-        LEFT JOIN departments d ON w.department_id = d.id
-        ORDER BY i.created_at DESC
-        LIMIT 10
-      `).all();
+      const { issues } = await apiClient.listIssues({ limit: 10, page: 1 });
       return { success: true, data: issues };
     } catch (err) {
-      return { success: false, error: err.message };
+      return {
+        success: false,
+        error: `Could not load issues from API (${loadConfig().apiBaseUrl}): ${err.message}`,
+      };
     }
   });
 
@@ -213,49 +244,21 @@ function setupIPC() {
   });
 
   // Issues
-  ipcMain.handle('issues:list', (event, { search, status, page = 1, limit = 10 }) => {
-    const db = getDatabase();
+  ipcMain.handle('issues:list', async (event, { search, status, page = 1, limit = 10 }) => {
     try {
-      let query = `
-        SELECT i.*, w.name as worker_name, d.name as department_name
-        FROM issues i
-        LEFT JOIN workers w ON i.worker_id = w.id
-        LEFT JOIN departments d ON w.department_id = d.id
-        WHERE 1=1
-      `;
-      const params = [];
-
-      if (search) {
-        query += ` AND (i.title LIKE ? OR i.description LIKE ?)`;
-        params.push(`%${search}%`, `%${search}%`);
-      }
-      if (status) {
-        query += ` AND i.status = ?`;
-        params.push(status);
-      }
-
-      const offset = (page - 1) * limit;
-      const countStmt = db.prepare(`SELECT COUNT(*) as count FROM issues i WHERE 1=1 ${search ? 'AND (i.title LIKE ? OR i.description LIKE ?)' : ''} ${status ? 'AND i.status = ?' : ''}`);
-      const total = countStmt.get(...params).count;
-
-      query += ` ORDER BY i.created_at DESC LIMIT ? OFFSET ?`;
-      const stmt = db.prepare(query);
-      const issues = stmt.all(...params, limit, offset);
-
-      return { success: true, data: { issues, total, page, limit } };
+      const data = await apiClient.listIssues({ search, status, page, limit });
+      return { success: true, data };
     } catch (err) {
-      return { success: false, error: err.message };
+      return {
+        success: false,
+        error: `Could not load issues from API (${loadConfig().apiBaseUrl}): ${err.message}`,
+      };
     }
   });
 
-  ipcMain.handle('issues:update', (event, { id, issue }) => {
-    const db = getDatabase();
+  ipcMain.handle('issues:update', async (event, { id, issue }) => {
     try {
-      db.prepare(`
-        UPDATE issues
-        SET title = ?, description = ?, category = ?, status = ?, worker_id = ?, updated_at = CURRENT_TIMESTAMP
-        WHERE id = ?
-      `).run(issue.title, issue.description, issue.category, issue.status, issue.worker_id || null, id);
+      await apiClient.updateIssue(id, issue);
       return { success: true };
     } catch (err) {
       return { success: false, error: err.message };
